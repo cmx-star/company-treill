@@ -2,215 +2,144 @@
 
 ## 发布模型
 
-发布分为两个不可混淆的对象：
+本仓库是一个 Trellis marketplace，同时提供：
 
-1. 固定 Registry 版本：registry/ 内容所在的不可变 commit。
-2. 稳定 Channel：channel/.trellis/team-channel.json 指向已经验证的固定 commit。
+1. `company-spec`：安装到业务项目 `.trellis/spec/company/` 的公司规范模板。
+2. `company-default`：安装为业务项目 `.trellis/workflow.md` 的公司工作流模板。
 
-业务项目通常绑定：
+稳定来源为：
 
 ~~~text
-git@github.com:cmx-star/company-treill/channel#main
+git@github.com:cmx-star/company-treill#main
 ~~~
 
-Trellis 先读取稳定 Channel，再解析到完整 40 位 commit SHA。
-维护者和业务项目都需要配置可访问该 GitHub 私有仓库的 SSH 密钥。
+业务项目可以使用完整 commit SHA 固定版本。仓库不维护另一层通道文件，也不生成 Trellis 私有发布协议。
 
-## 发布前修改
-
-只在对应位置修改：
+## 维护位置
 
 | 内容 | 路径 |
 | --- | --- |
-| 默认工作流 | registry/.trellis/workflows/company-default.md |
-| Git 流程 | registry/.trellis/skills/company-git-workflow/SKILL.md |
-| 产品差异 | registry/.trellis/skills/company-product-variants/SKILL.md |
-| 公司工程规范 | registry/.trellis/spec/company/ |
-| 公司默认配置 | registry/.trellis/team-defaults.yaml |
+| Marketplace 索引 | index.json |
+| 公司默认工作流 | marketplace/workflows/company-default.md |
+| 公司工程规范 | marketplace/specs/company/engineering.md |
+| 公司质量规范 | marketplace/specs/company/quality.md |
+| 公司安全规范 | marketplace/specs/company/security.md |
+| 公司 Git 流程 | marketplace/specs/company/git-workflow.md |
+| 公司产品差异 | marketplace/specs/company/product-variants.md |
 | 项目规范示例 | examples/project-spec/ |
 
-examples/project-spec/ 不进入 Team Manifest。
+项目规范示例不进入 `company-spec`，不会分发到业务项目。
 
-## 版本规则
+## Marketplace 协议
 
-团队版本使用：
+`index.json` 必须保留两个模板：
 
-~~~text
-YYYY.MM.N
+~~~json
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "company-spec",
+      "type": "spec",
+      "name": "公司级开发规范",
+      "path": "marketplace/specs"
+    },
+    {
+      "id": "company-default",
+      "type": "workflow",
+      "name": "公司默认工作流",
+      "path": "marketplace/workflows/company-default.md"
+    }
+  ]
+}
 ~~~
 
-例如：
-
-~~~text
-2026.08.1
-2026.08.2
-~~~
-
-同月 N 递增。回滚版本可以低于当前版本，但 Manifest 必须设置 rollbackVersion 为成员当前安装版本。
-
-## 构建 Manifest
-
-在仓库根目录执行：
-
-~~~bash
-TEAM_VERSION=2026.08.1 node scripts/build-manifest.mjs
-~~~
-
-可选发布摘要：
-
-~~~bash
-TEAM_VERSION=2026.08.1 \
-TEAM_SUMMARY="公司默认工作流和工程规范首版" \
-node scripts/build-manifest.mjs
-~~~
-
-脚本会：
-
-- 扫描 registry/.trellis/spec、skills 和 workflows。
-- 加入 team-defaults.yaml。
-- 拒绝符号链接。
-- 生成每个文件的 SHA256。
-- 保留已有删除、重命名、废弃和治理字段。
-- 未提供私钥时删除过期签名文件。
-
-## 可选签名
-
-私钥必须保存在仓库外部：
-
-~~~bash
-TEAM_SIGNING_PRIVATE_KEY_FILE=/secure/team-maintainer.pem \
-TEAM_VERSION=2026.08.1 \
-node scripts/build-manifest.mjs
-~~~
-
-脚本仅保留仍能验证当前 Manifest 的签名，并输出 signer key id。
-
-不得提交私钥、PEM、令牌或真实凭据。
+实际索引还应保留中文 `description` 和标签。Spec 模板路径指向目录，Workflow 模板路径必须指向 Markdown 文件。
 
 ## 提交前完整性门禁
+
+准备好本次全部变化后，在仓库根目录只运行一次：
 
 ~~~bash
 node scripts/check-release.mjs
 ~~~
 
-check-release.mjs 是提交前硬门禁，会自动检查：
-
-- 当前 Git 差异是否存在行尾空白、冲突标记或其他格式错误。
-- Manifest schema、字段规范化顺序和版本格式。
-- 分发目录中的文件是否全部进入 Manifest。
-- Manifest 中每个 SHA256 是否与当前文件一致。
-- default_workflow 是否指向实际存在的 Workflow。
-- Phase Index、三个 Phase 和 14 个步骤是否能按 Trellis 协议提取。
-- 6 组 workflow-state 是否完整、成对且唯一。
-- 是否残留“只有显式 /flow 才进入流程”的旧路由。
-- Skill 目录、name、description 和 frontmatter。
-- CHANGELOG、功能说明、使用指南和发布指南。
-- 可选签名和稳定 Channel 指针。
-
-该命令没有通过时不得提交固定版本。
-
-## 固定版本发布
-
-1. 提交 Registry、文档、脚本和 Manifest。
-2. 推送提交，取得完整 commit SHA。
-3. 在测试项目临时配置：
-
-~~~yaml
-registry:
-  team:
-    source: git@github.com:cmx-star/company-treill/registry#<完整 commit SHA>
-~~~
-
-4. 运行：
+默认使用当前 `PATH` 中的 `trellis`。需要指定官方 CLI 文件时设置 `TRELLIS_CLI`：
 
 ~~~bash
-trellis team validate
-trellis team preview
-trellis update
-trellis team doctor
+TRELLIS_CLI=/absolute/path/to/trellis.js node scripts/check-release.mjs
 ~~~
 
-5. 验证：
+检查内容包括：
 
-- company-default.md 已安装。
-- default_workflow 自动合并为 company-default。
-- 公司 Skill 已投影到启用的平台。
-- 项目已有配置和项目 Spec 未被覆盖。
-- 第二次 update 无变化且不产生重复更新。
-- 普通开发任务自动读取 company-default。
+- Git 差异中的行尾空白和冲突标记。
+- Marketplace schema、模板 ID、类型、路径和目录边界。
+- 5 份公司 Spec 的文件集合和文本格式。
+- Workflow 的 Phase Index、三个 Phase、14 个步骤和 6 个状态块。
+- Workflow 是否读取公司 Git 和产品差异规范。
+- 中文 README、功能说明、使用指南、发布指南和项目示例。
+- 当前文档是否只使用官方已发布命令。
+- 官方 CLI 是否实际提供 `--registry`、`--workflow-source` 和 `--marketplace`。
+- 临时项目中真实执行 `init`、`update` 和 Workflow 刷新。
+- 公司 Spec、Workflow 是否安装正确，项目级 Spec 是否保留。
 
-固定版本验证失败时，不更新稳定 Channel。
+任何一项失败都不得提交。不要用增量修复提交试跑检查。
 
-## 更新稳定 Channel
-
-固定版本通过后，修改：
-
-~~~text
-channel/.trellis/team-channel.json
-~~~
-
-内容：
-
-~~~json
-{
-  "schemaVersion": 1,
-  "source": "git@github.com:cmx-star/company-treill/registry#<完整 commit SHA>"
-}
-~~~
-
-Channel 只能指向同一个 provider、host 和仓库中的固定 commit。
-
-提交并推送 Channel 更新后，再用稳定来源执行一次：
+只排查静态结构时可以运行：
 
 ~~~bash
-trellis team validate
-trellis team preview
-trellis update
-trellis team doctor
+node scripts/check-release.mjs --static-only
 ~~~
 
-准备好 Channel、文档和脚本的全部变化后，提交前只运行一次完整门禁：
+静态模式不能作为发布通过证据。
+
+## 发布步骤
+
+1. 修改 marketplace 内容和对应中文文档。
+2. 在 `CHANGELOG.md` 记录变化、兼容性和迁移影响。
+3. 运行一次完整门禁并确认通过。
+4. 检查 `git status` 和最终 diff，只包含本次范围。
+5. 获得提交和推送授权后，统一提交并推送 `main`。
+6. 使用远端来源在全新项目做一次接入检查。
+
+远端检查命令：
 
 ~~~bash
-node scripts/check-release.mjs --require-channel
+trellis init --yes --codex --registry "git@github.com:cmx-star/company-treill#main" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill#main"
+trellis update --skip-all
+trellis workflow --marketplace "git@github.com:cmx-star/company-treill#main" --template company-default --force
 ~~~
 
-门禁通过后再统一提交和推送，不使用增量修复提交试跑检查。
+验收结果必须包括：
+
+- `.trellis/spec/company/` 中存在 5 份公司规范。
+- `.trellis/workflow.md` 与发布内容一致。
+- `.trellis/config.yaml` 记录 `company-spec` 来源和模板 ID。
+- `.trellis/spec/project/` 中已有项目规范未被删除。
+- 普通开发任务不需要额外命令入口即可读取公司工作流。
+
+## 更新兼容性
+
+公司 Spec 由 `trellis update` 刷新。删除或重命名公司 Spec 文件会改变业务项目的长期规则，应在发布前说明迁移和旧文件处理方式。
+
+公司 Workflow 是用户管理的 marketplace 模板，不会由 `trellis update` 自动覆盖。修改 Workflow 后，使用方需要重新执行 `trellis workflow --marketplace ... --template company-default --force`。
 
 ## 回滚
 
-推荐发布一个新的回滚 Manifest：
+发布内容有问题时，优先在本仓库创建修复或回滚提交，再让业务项目重新执行更新命令。
 
-- teamVersion 可以低于当前版本。
-- rollbackVersion 设置为成员当前版本。
-- files 指向要恢复的文件内容。
-- Channel 更新到回滚 Manifest 所在 commit。
+需要立即固定旧版本时，把来源中的 `#main` 替换为已验证的完整 commit SHA，并让 Spec 与 Workflow 使用同一个 SHA。
 
-成员正常运行：
-
-~~~bash
-trellis update
-~~~
-
-只有紧急人工降级才使用：
-
-~~~bash
-trellis update --allow-team-downgrade
-~~~
-
-不要手工修改 .team-state.json、.template-hashes.json 或更新 receipt 伪造状态。
+不要通过删除项目 `.trellis/`、覆盖项目规范或安装未发布的 Trellis 版本进行回滚。
 
 ## 发布记录
 
 每次发布至少记录：
 
-- teamVersion。
-- 固定 commit SHA。
-- Channel commit SHA。
-- 变化范围。
-- Trellis 兼容区间。
-- 废弃、删除和重命名。
-- 验证项目和执行命令。
-- 未验证项。
-- 回滚版本和操作。
-- 签名 key id 和审批数；未启用签名时明确记录。
+- Marketplace commit SHA。
+- 公司 Spec 和 Workflow 的变化范围。
+- 最低验证 Trellis 版本。
+- 完整门禁命令和结果。
+- 远端接入验证结果。
+- 删除、重命名和迁移说明。
+- 未验证项和残余风险。

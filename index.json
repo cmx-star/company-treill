@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "company-spec",
+      "type": "spec",
+      "name": "公司级开发规范",
+      "description": "公司工程、质量、安全、Git 流程和产品差异规范",
+      "path": "marketplace/specs",
+      "tags": ["company", "engineering"]
+    },
+    {
+      "id": "company-default",
+      "type": "workflow",
+      "name": "公司默认工作流",
+      "description": "自动完成定界、方案、实施、验证、审查和收尾",
+      "path": "marketplace/workflows/company-default.md",
+      "tags": ["company", "workflow"]
+    }
+  ]
+}

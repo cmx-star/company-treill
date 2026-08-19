@@ -2,98 +2,98 @@
 
 ## 前置条件
 
-确认项目已经安装支持 Team Registry 的 Trellis：
+确认使用官方 npm 包，版本不低于 0.6.15：
 
 ~~~bash
 trellis --version
-trellis --help
+trellis init --help
+trellis workflow --help
 ~~~
 
-公司 Registry 2026.08.1 要求 Trellis 0.6.15 或更高、且低于 0.8.0。
+帮助中必须包含：
+
+- `init --registry`
+- `init --workflow-source`
+- `workflow --marketplace`
+
+公司仓库通过 GitHub SSH 访问，还需要确认当前机器有仓库权限：
+
+~~~bash
+ssh -T git@github.com
+~~~
 
 ## 首次接入
 
 在业务项目根目录执行：
 
 ~~~bash
-trellis init --team-registry 'git@github.com:cmx-star/company-treill/channel#main'
+trellis init --registry "git@github.com:cmx-star/company-treill#main" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill#main"
 ~~~
 
-公司 Registry 使用 GitHub SSH 访问。执行前需要配置可访问该私有仓库的 SSH 密钥。
+命令中的 `--append` 会保留已有项目规范，只补充模板中缺少的文件。Trellis 仍会正常询问要配置的 AI 平台。
 
-如果项目已经初始化 Trellis，在 .trellis/config.yaml 中增加：
-
-~~~yaml
-registry:
-  team:
-    source: git@github.com:cmx-star/company-treill/channel#main
-~~~
-
-然后运行：
+Codex 项目需要非交互初始化时可以明确指定平台：
 
 ~~~bash
-trellis team validate
-trellis team preview
-trellis update
-trellis team doctor
+trellis init --yes --codex --registry "git@github.com:cmx-star/company-treill#main" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill#main"
 ~~~
+
+其他平台使用 Trellis `init --help` 中已经发布的对应参数，不猜测平台名称。
 
 ## 验证接入结果
 
-检查默认工作流：
-
-~~~bash
-rg -n "^default_workflow:" .trellis/config.yaml
-~~~
-
-预期结果：
+公司规范应安装到：
 
 ~~~text
-default_workflow: company-default
-~~~
-
-检查公司文件：
-
-~~~bash
-find .trellis/workflows .trellis/spec/company .trellis/skills -type f | sort
-~~~
-
-至少应包含：
-
-~~~text
-.trellis/workflows/company-default.md
 .trellis/spec/company/engineering.md
+.trellis/spec/company/git-workflow.md
+.trellis/spec/company/product-variants.md
 .trellis/spec/company/quality.md
 .trellis/spec/company/security.md
-.trellis/skills/company-git-workflow/SKILL.md
-.trellis/skills/company-product-variants/SKILL.md
 ~~~
 
-公司 Skill 还会由 Trellis 投影到项目已经启用的 AI 平台目录。
+公司工作流应安装为：
 
-## 日常任务怎么使用
+~~~text
+.trellis/workflow.md
+~~~
 
-正常描述任务即可。
+`.trellis/config.yaml` 应包含：
 
-示例：
+~~~yaml
+registry:
+  spec:
+    source: git@github.com:cmx-star/company-treill#main
+    template: company-spec
+~~~
+
+macOS、Linux 或 Git Bash 可以检查：
+
+~~~bash
+find .trellis/spec/company -type f | sort
+rg -n "^registry:|source:|template:" .trellis/config.yaml
+~~~
+
+Windows PowerShell 可以检查：
+
+~~~powershell
+Get-ChildItem .trellis\spec\company -File
+Select-String -Path .trellis\config.yaml -Pattern "registry:|source:|template:"
+~~~
+
+## 日常任务
+
+接入后正常描述任务即可，例如：
 
 ~~~text
 修复登录页在令牌过期后仍显示已登录的问题。
 ~~~
 
-工作流会自动：
-
-1. 读取公司规范、项目规范和 Git 状态。
-2. 判断使用紧凑路径、标准路径还是 diagnose。
-3. 明确目标、范围、验收和验证。
-4. 在需要时创建或继续 Trellis Task。
-5. 实施当前切片。
-6. 运行验证并审查结果。
-7. 报告未验证项、风险和 Git 状态。
+Trellis 会把 `.trellis/workflow.md` 注入支持的平台上下文。公司工作流会自动读取 `.trellis/spec/company/` 和项目规范，完成任务分类、定界、实施、验证、审查与收尾，不需要额外命令入口。
 
 ## 项目级规范
 
-公司 Registry 不分发业务项目的真实架构和命令。项目团队应在自己的仓库维护：
+真实项目规范继续由业务项目自己维护：
 
 ~~~text
 .trellis/spec/project/
@@ -103,9 +103,9 @@ find .trellis/workflows .trellis/spec/company .trellis/skills -type f | sort
 └── testing.md
 ~~~
 
-可以参考本仓库 examples/project-spec/，但必须用当前项目事实替换示例内容。
+可以参考本仓库 `examples/project-spec/`，但必须使用当前项目事实替换示例内容。
 
-项目级规范应记录：
+项目规范应记录：
 
 - 架构和模块边界。
 - 技术栈和版本。
@@ -114,85 +114,66 @@ find .trellis/workflows .trellis/spec/company .trellis/skills -type f | sort
 - 测试分层和验收路径。
 - 敏感区域和扩大验证条件。
 
+公司模板只写入 `.trellis/spec/company/`，不会把示例项目规范分发到业务项目。
+
 ## 获取公司更新
 
-更新前：
+先刷新公司 Spec：
 
 ~~~bash
-trellis team status --remote
-trellis team validate
-trellis team preview
+trellis update --skip-all
 ~~~
 
-应用更新：
+再刷新公司 Workflow：
 
 ~~~bash
-trellis update
+trellis workflow --marketplace "git@github.com:cmx-star/company-treill#main" --template company-default --force
 ~~~
 
-更新后：
-
-~~~bash
-trellis team doctor
-~~~
-
-## defaults 冲突
-
-team-defaults.yaml 使用三方合并：
-
-- 本地值未修改时跟随公司新默认。
-- 本地值已经修改时保留本地值。
-- 新增公司默认会补入配置。
-- 公司删除旧默认且本地未修改时会删除。
-- 类型冲突时保留本地值并报告冲突。
-
-不要为了更新公司规范手工覆盖整个 .trellis/config.yaml。
+最后检查公司文件和项目级规范仍然存在。`trellis update` 使用 Trellis 自带的模板哈希和冲突处理；Workflow 更新中的 `--force` 会明确覆盖当前 `.trellis/workflow.md`。
 
 ## 固定版本
 
-排查升级问题或需要严格复现时，可以临时绑定固定 commit：
+排查更新问题或需要严格复现时，可以把 `#main` 替换为完整 40 位 commit SHA，并让 Spec 与 Workflow 使用同一个来源：
 
-~~~yaml
-registry:
-  team:
-    source: git@github.com:cmx-star/company-treill/registry#0123456789abcdef0123456789abcdef01234567
+~~~bash
+trellis init --registry "git@github.com:cmx-star/company-treill#0123456789abcdef0123456789abcdef01234567" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill#0123456789abcdef0123456789abcdef01234567"
 ~~~
 
-固定来源必须使用完整 40 位 commit SHA。
+固定来源不会自动跟随 `main` 更新。
 
 ## 常见问题
 
-### 默认工作流没有变化
+### init 不认识 registry 或 workflow-source
 
-依次检查：
-
-~~~bash
-trellis team validate
-trellis team preview
-trellis update
-rg -n "^default_workflow:" .trellis/config.yaml
-~~~
-
-如果项目曾修改 default_workflow，三方合并会保留项目本地选择。检查 preview 和 doctor 的 defaults 结果。
-
-### 公司 Skill 没有出现在平台目录
-
-检查项目实际启用了哪些平台，并运行：
+当前 `trellis` 不是支持本方案的官方版本。执行：
 
 ~~~bash
-trellis update
-trellis team doctor
+trellis --version
+trellis init --help
 ~~~
 
-Skill 的源文件保存在 .trellis/skills/，平台副本由 Trellis 生成，不手工维护。
+不要通过猜测新参数解决；先确认安装的是 `@mindfoldhq/trellis` 0.6.15 或更高版本，并以实际帮助输出为准。
 
-### 本地修改了公司管理文件
+### SSH 权限失败
 
-运行：
+先确认：
 
 ~~~bash
-trellis team status
-trellis team preview
+ssh -T git@github.com
+git ls-remote git@github.com:cmx-star/company-treill.git
 ~~~
 
-根据 Trellis 冲突提示保留本地版本、接受公司版本或生成 .new 文件。需要形成长期项目差异时，应把规则写入项目 Spec，不直接修改公司分发副本。
+不能访问仓库时，由有权限的管理员配置 GitHub 账号和 SSH 密钥；不要把私钥复制到项目或聊天中。
+
+### 公司 Workflow 没有更新
+
+`trellis update` 只会根据 Registry 配置刷新公司 Spec。Workflow 需要执行：
+
+~~~bash
+trellis workflow --marketplace "git@github.com:cmx-star/company-treill#main" --template company-default --force
+~~~
+
+### 项目修改了公司规范
+
+运行 `trellis update`，按 Trellis 的冲突提示处理。长期项目差异应写入 `.trellis/spec/project/`，不要直接修改公司分发副本。
