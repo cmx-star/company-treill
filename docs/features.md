@@ -14,11 +14,11 @@
 | quality.md | 验证、Bug 根因、审查、完成条件和未验证结果说明 |
 | security.md | 密钥、权限、数据、配置和供应链边界 |
 
-Spec Marketplace 的本质是把模板复制进项目，作为项目规范的起点。安装后的文件属于业务项目，不是远程 Wiki 或运行时网络引用。安装器保留 Registry 来源，后续可通过 `trellis update` 刷新已分发内容，但每次更新仍应作为普通项目文件变更进行审查和提交。
+Spec Marketplace 的本质是把模板复制进项目，作为项目规范的起点。安装后的文件属于业务项目，不是远程 Wiki 或运行时网络引用。安装器从当前 Git 包本地复制公司 Spec，后续通过 `company-trellis update` 刷新已分发内容；每次更新仍应作为普通项目文件变更进行审查和提交。
 
 ### Custom Workflow
 
-`company-default` 通过官方 Custom Workflow marketplace 安装为唯一的 `.trellis/workflow.md`。
+`company-default` 按官方 Custom Workflow marketplace 结构维护，并由安装器复制为项目唯一的 `.trellis/workflow.md`。
 
 工作流保留完整的定界、方案、切分、实施、诊断、验证、审查和收尾阶段，并根据请求自动路由：
 
@@ -71,11 +71,11 @@ Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本�
 
 `company-trellis update` 顺序执行：
 
-1. `trellis update --skip-all`，刷新 Trellis 管理内容和公司 Spec。
-2. `trellis workflow --marketplace ... --force`，替换公司 Workflow。
-3. `npx --yes skills@1.5.23 add ... --copy --yes`，重新复制两个公司 Skill。
+1. `trellis update --skip-all`，刷新 Trellis 官方管理内容。
+2. 从当前 Git 包复制 `.trellis/spec/company/` 和 `.trellis/workflow.md`。
+3. `npm exec --yes --package=skills@1.5.23 -- skills add ... --copy --yes`，通过 HTTPS Git 重新复制两个公司 Skill。
 
-Workflow 的 `--force` 会覆盖项目当前 `.trellis/workflow.md`。项目若需要长期定制 Workflow，应建立经过批准的项目变体，不能把本地修改留在公司分发副本中等待下次被覆盖。
+公司 Workflow 更新会覆盖项目当前 `.trellis/workflow.md`。项目若需要长期定制 Workflow，应建立经过批准的项目变体，不能把本地修改留在公司分发副本中等待下次被覆盖。
 
 ## 明确不提供
 

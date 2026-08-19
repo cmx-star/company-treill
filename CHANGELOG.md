@@ -25,7 +25,7 @@
 ### 迁移
 
 - 删除旧的公司 Git 与产品差异 Spec 文件；已接入项目应安装同名公司 Skill，并清理旧 Spec 副本。
-- 旧的仓库根 `index.json` 移至 `marketplace/index.json`，Registry 来源改为 `git@github.com:cmx-star/company-treill/marketplace#main`。
+- 旧的仓库根 `index.json` 移至 `marketplace/index.json`，Registry 来源改为 `https://github.com/cmx-star/company-treill/tree/main/marketplace`。
 
 ## 2026.08.2 - 2026-08-19
 

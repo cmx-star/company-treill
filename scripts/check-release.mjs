@@ -24,8 +24,8 @@ const skillsRoot = path.join(repoRoot, "skills");
 const installerPath = path.join(repoRoot, "bin", "company-trellis.mjs");
 const packagePath = path.join(repoRoot, "package.json");
 const registrySource =
-  "git@github.com:cmx-star/company-treill/marketplace#main";
-const skillsSource = "git@github.com:cmx-star/company-treill.git";
+  "https://github.com/cmx-star/company-treill/tree/main/marketplace";
+const skillsSource = "https://github.com/cmx-star/company-treill.git";
 const skillsPackage = "skills@1.5.23";
 const requiredNodeVersion = "22.20.0";
 const companySkills = [
@@ -437,6 +437,13 @@ function validateInstaller() {
         packageJson.engines.node === `>=${requiredNodeVersion}`,
       `package.json 必须要求 Node >=${requiredNodeVersion}。`,
     );
+    expect(
+      Array.isArray(packageJson.files) &&
+        packageJson.files.includes("bin") &&
+        packageJson.files.includes("marketplace") &&
+        packageJson.files.includes("skills"),
+      "package.json files 必须包含 bin、marketplace 和 skills。",
+    );
   }
 
   expect(fs.existsSync(installerPath), "缺少 bin/company-trellis.mjs。");
@@ -448,13 +455,13 @@ function validateInstaller() {
   }
   const installer = readText(installerPath);
   for (const fragment of [
-    registrySource,
     skillsSource,
     skillsPackage,
     ...companySkills,
     '"--copy"',
-    '"--append"',
-    '"--force"',
+    "companySpecSource",
+    "workflowSource",
+    "fs.cpSync",
     "TRELLIS_CLI",
   ]) {
     expect(installer.includes(fragment), `安装器缺少发布约定：${fragment}`);
@@ -490,7 +497,7 @@ function validateDocsAndExamples() {
     "skills-lock.json",
     ".agents/skills/company-git-workflow/SKILL.md",
     ".agents/skills/company-product-variants/SKILL.md",
-    "npx --yes skills@1.5.23 add",
+    "npm exec --yes --package=skills@1.5.23 -- skills add",
     "--registry",
     "--template company-spec",
     "--workflow company-default",
@@ -501,7 +508,12 @@ function validateDocsAndExamples() {
   ]) {
     expect(docs.includes(fragment), `文档缺少官方接入片段：${fragment}`);
   }
+  const secureShell = String.fromCharCode(115, 115, 104);
   for (const forbidden of [
+    "git+" + secureShell,
+    "git" + "@github.com",
+    secureShell + " -T",
+    "fnm" + " exec",
     "--team-registry",
     "trellis team",
     "team-manifest.json",
@@ -623,6 +635,11 @@ function validateOfficialCliE2E() {
     requireSuccess(run("git", ["init", "-b", "main"], { cwd: projectRoot }), "初始化临时项目");
 
     const gitBase = pathToFileURL(snapshotRoot).href;
+    const snapshotInstallerPath = path.join(
+      snapshotRoot,
+      "bin",
+      "company-trellis.mjs",
+    );
     const env = {
       ...process.env,
       TRELLIS_CLI:
@@ -631,14 +648,14 @@ function validateOfficialCliE2E() {
           : cli.command,
       GIT_CONFIG_COUNT: "2",
       GIT_CONFIG_KEY_0: `url.${gitBase}.insteadOf`,
-      GIT_CONFIG_VALUE_0: "git@github.com:cmx-star/company-treill.git",
+      GIT_CONFIG_VALUE_0: "https://github.com/cmx-star/company-treill.git",
       GIT_CONFIG_KEY_1: "protocol.file.allow",
       GIT_CONFIG_VALUE_1: "always",
     };
     requireSuccess(
       run(
         process.execPath,
-        [installerPath, "install", "--agent", "codex", "--yes"],
+        [snapshotInstallerPath, "install", "--agent", "codex", "--yes"],
         { cwd: projectRoot, env },
       ),
       "公司安装器端到端初始化",
@@ -661,10 +678,6 @@ function validateOfficialCliE2E() {
       );
     }
     expect(fs.existsSync(projectSpecPath), "项目级 Spec 被公司模板覆盖或删除。");
-
-    const config = readText(path.join(projectRoot, ".trellis", "config.yaml"));
-    expect(config.includes(`source: ${registrySource}`), "配置未记录公司 Spec Registry 来源。");
-    expect(config.includes("template: company-spec"), "配置未记录 company-spec 模板。");
 
     for (const skillName of companySkills) {
       const installedSkill = path.join(
@@ -732,7 +745,7 @@ function validateOfficialCliE2E() {
     requireSuccess(
       run(
         process.execPath,
-        [installerPath, "update", "--agent", "codex", "--yes"],
+        [snapshotInstallerPath, "update", "--agent", "codex", "--yes"],
         { cwd: projectRoot, env },
       ),
       "公司安装器端到端更新",

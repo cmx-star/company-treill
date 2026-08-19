@@ -8,12 +8,13 @@
 2. Custom Workflow：`company-default`，安装为 `.trellis/workflow.md`。
 3. Custom Skills：通过 skills.sh 复制到项目的 Agent Skill 目录。
 
-稳定分支来源为：
+稳定安装来源为：
 
 ~~~text
-git@github.com:cmx-star/company-treill.git#main
-git@github.com:cmx-star/company-treill/marketplace#main
+https://github.com/cmx-star/company-treill.git#main
 ~~~
+
+`marketplace/` 仍按 Trellis Marketplace 协议维护，随 Git 包一起分发；安装器从当前 Git 包本地复制公司 Spec 与 Workflow，避免把业务项目接入绑定到 GitHub raw 文件读取。
 
 这里的“发布”是完整检查通过后提交并推送公司仓库 `main`。`package.json` 只提供可从私有 Git 执行的安装入口，保持 `private: true`，不要求发布到 npm Registry。
 
@@ -71,13 +72,13 @@ Frontmatter 至少包含与目录一致的 `name` 和可用于自动触发的 `d
 准备好本次全部修改后，在提交前运行一次：
 
 ~~~bash
-fnm exec --using=22.20.0 -- node scripts/check-release.mjs
+node scripts/check-release.mjs
 ~~~
 
 需要指定官方 Trellis CLI 文件时：
 
 ~~~bash
-fnm exec --using=22.20.0 -- env TRELLIS_CLI=/absolute/path/to/trellis.js node scripts/check-release.mjs
+env TRELLIS_CLI=/absolute/path/to/trellis.js node scripts/check-release.mjs
 ~~~
 
 完整门禁检查：
@@ -96,7 +97,7 @@ fnm exec --using=22.20.0 -- env TRELLIS_CLI=/absolute/path/to/trellis.js node sc
 静态排查命令：
 
 ~~~bash
-fnm exec --using=22.20.0 -- node scripts/check-release.mjs --static-only
+node scripts/check-release.mjs --static-only
 ~~~
 
 静态模式只用于开发中定位结构问题，不能作为提交或发布通过证据。不要为了试门禁连续制造多个修复提交；先完成修改，再一次检查、一次审查、一次提交。
@@ -109,12 +110,12 @@ fnm exec --using=22.20.0 -- node scripts/check-release.mjs --static-only
 4. 检查 `git status`、最终 diff 和删除文件，只保留本次范围。
 5. 获得独立的提交和推送授权。
 6. 统一提交并推送 `main`。
-7. 从远端来源在临时业务项目再执行一次安装命令。
+7. 从远端 Git 包在临时业务项目再执行一次安装命令。
 
 远端检查：
 
 ~~~bash
-fnm exec --using=22.20.0 -- npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent codex --yes
+npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent <名称> --yes
 ~~~
 
 验收至少包括：
@@ -140,7 +141,7 @@ fnm exec --using=22.20.0 -- npm exec --yes --package="git+ssh://git@github.com/c
 
 发布内容有问题时，优先在本仓库创建修复或回滚提交，再让业务项目重新执行更新。
 
-需要立即固定旧版本时，把 Git package、Spec Marketplace 和 Custom Workflow 来源都固定到同一个已验证 commit SHA。不要通过删除整个 `.trellis/`、覆盖项目规范或安装未发布的 Trellis 版本回滚。
+需要立即固定旧版本时，把 Git package 来源固定到一个已验证 commit SHA。不要通过删除整个 `.trellis/`、覆盖项目规范或安装未发布的 Trellis 版本回滚。
 
 ## 官方参考
 

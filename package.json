@@ -11,6 +11,8 @@
     "node": ">=22.20.0"
   },
   "files": [
-    "bin"
+    "bin",
+    "marketplace",
+    "skills"
   ]
 }

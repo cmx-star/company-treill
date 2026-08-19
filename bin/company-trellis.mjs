@@ -3,15 +3,32 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const REGISTRY_SOURCE =
-  "git@github.com:cmx-star/company-treill/marketplace#main";
-const SKILLS_SOURCE = "git@github.com:cmx-star/company-treill.git";
+  "https://github.com/cmx-star/company-treill/tree/main/marketplace";
+const SKILLS_SOURCE = "https://github.com/cmx-star/company-treill.git";
 const SKILLS_PACKAGE = "skills@1.5.23";
 const COMPANY_SKILLS = [
   "company-git-workflow",
   "company-product-variants",
 ];
+const packageRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+);
+const companySpecSource = path.join(
+  packageRoot,
+  "marketplace",
+  "specs",
+  "company",
+);
+const workflowSource = path.join(
+  packageRoot,
+  "marketplace",
+  "workflows",
+  "company-default.md",
+);
 
 const PLATFORM_FLAGS = new Map([
   ["antigravity", "--antigravity"],
@@ -160,8 +177,11 @@ function trellisPlatformArgs(agents) {
 
 function installSkills(options) {
   const args = [
+    "exec",
     "--yes",
-    SKILLS_PACKAGE,
+    `--package=${SKILLS_PACKAGE}`,
+    "--",
+    "skills",
     "add",
     SKILLS_SOURCE,
     "--skill",
@@ -172,22 +192,30 @@ function installSkills(options) {
     args.push("--agent", ...options.agents);
   }
   if (options.yes) args.push("--yes");
-  run("npx", args, options);
+  run("npm", args, options);
+}
+
+function copyCompanyDistribution(options) {
+  const specTarget = path.join(options.project, ".trellis", "spec", "company");
+  const workflowTarget = path.join(options.project, ".trellis", "workflow.md");
+  console.log(`> copy ${quote(companySpecSource)} ${quote(specTarget)}`);
+  console.log(`> copy ${quote(workflowSource)} ${quote(workflowTarget)}`);
+  if (options.dryRun) return;
+  if (!fs.existsSync(companySpecSource)) {
+    throw new Error(`安装包缺少公司 Spec：${companySpecSource}`);
+  }
+  if (!fs.existsSync(workflowSource)) {
+    throw new Error(`安装包缺少公司 Workflow：${workflowSource}`);
+  }
+  fs.rmSync(specTarget, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(specTarget), { recursive: true });
+  fs.cpSync(companySpecSource, specTarget, { recursive: true });
+  fs.mkdirSync(path.dirname(workflowTarget), { recursive: true });
+  fs.copyFileSync(workflowSource, workflowTarget);
 }
 
 function install(options) {
-  const args = [
-    "init",
-    "--registry",
-    REGISTRY_SOURCE,
-    "--template",
-    "company-spec",
-    "--append",
-    "--workflow",
-    "company-default",
-    "--workflow-source",
-    REGISTRY_SOURCE,
-  ];
+  const args = ["init"];
   if (options.yes) {
     if (options.agents.length === 0) {
       throw new Error("非交互安装必须至少指定一个 --agent。");
@@ -195,22 +223,13 @@ function install(options) {
     args.push("--yes", ...trellisPlatformArgs(options.agents));
   }
   runTrellis(args, options);
+  copyCompanyDistribution(options);
   installSkills(options);
 }
 
 function update(options) {
   runTrellis(["update", "--skip-all"], options);
-  runTrellis(
-    [
-      "workflow",
-      "--marketplace",
-      REGISTRY_SOURCE,
-      "--template",
-      "company-default",
-      "--force",
-    ],
-    options,
-  );
+  copyCompanyDistribution(options);
   installSkills(options);
 }
 

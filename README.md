@@ -6,8 +6,8 @@
 
 | 官方路径 | 公司内容 | 安装结果 |
 | --- | --- | --- |
-| Spec Marketplace | 工程、质量、安全规范 | `.trellis/spec/company/` |
-| Custom Workflow | 公司默认开发工作流 | `.trellis/workflow.md` |
+| Spec Marketplace | 工程、质量、安全规范 | 从安装包复制到 `.trellis/spec/company/` |
+| Custom Workflow | 公司默认开发工作流 | 从安装包复制到 `.trellis/workflow.md` |
 | Custom Skills / skills.sh | Git 工作流、产品版本差异 | 项目对应的 Agent Skill 目录 |
 
 公司默认工作流安装后会自动参与普通开发任务，不需要 `/flow`。遇到 Git、提交、发版等请求时加载 `company-git-workflow`；遇到私有部署、品牌、市场或版本能力差异时加载 `company-product-variants`。
@@ -37,7 +37,7 @@ company-trellis/
 
 ## 安装
 
-安装或更新机器需要 Node 22.20.0 或更高版本，并且当前 GitHub SSH 账号可以读取公司私有仓库。
+安装或更新机器需要 Node 22.20.0 或更高版本，并且当前 GitHub HTTPS 凭据可以读取公司私有仓库。
 
 先全局安装官方 Trellis CLI：
 
@@ -51,10 +51,10 @@ trellis --version
 然后在业务项目根目录执行公司 Trellis 安装命令：
 
 ~~~bash
-npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install
+npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis install
 ~~~
 
-安装器会交互询问项目使用的 Agent，并一次完成 Spec、Workflow 和 Skill 三部分分发。自动化或非交互环境由执行者自行追加一个或多个 `--agent <名称>` 和 `--yes`，仓库不预设项目使用的编辑器或 Agent。
+安装器会交互询问项目使用的 Agent，并一次完成 Trellis 官方初始化、公司 Spec、公司 Workflow 和公司 Skill 分发。自动化或非交互环境由执行者自行追加一个或多个 `--agent <名称>` 和 `--yes`，仓库不预设项目使用的编辑器或 Agent。
 
 安装后至少应看到：
 
@@ -75,18 +75,18 @@ skills-lock.json
 在业务项目根目录执行：
 
 ~~~bash
-npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis update
+npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis update
 ~~~
 
 更新会刷新公司 Spec、强制替换公司 Workflow，并重新复制公司 Skill。执行后必须检查 Git diff，确认项目级规范和本地项目约束没有被误改，再提交更新结果。
 
-## 直接使用官方命令
+## 分步排查命令
 
-安装器只是把以下官方方式合成一次操作，必要时仍可分别执行：
+安装器默认从当前 Git 包复制公司 Spec 与 Workflow，避免私有 GitHub 仓库的 raw 文件读取卡住。需要排查 Trellis Marketplace 兼容性时，可以单独执行以下官方命令：
 
 ~~~bash
-trellis init --registry "git@github.com:cmx-star/company-treill/marketplace#main" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill/marketplace#main"
-npx --yes skills@1.5.23 add git@github.com:cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
 ~~~
 
 ## 发布检查
