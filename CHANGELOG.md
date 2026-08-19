@@ -2,17 +2,17 @@
 
 ## 2026.08.3 - 2026-08-19
 
-按 Trellis 官方提供的三条路径重新整理公司分发方式，并增加一次安装入口。
+按 Trellis 官方提供的三条路径重新整理公司分发方式，撤回自写聚合安装器。
 
 ### 变更
 
 - Spec Marketplace 只分发工程、质量和安全 3 份公司规范。
 - 公司 Git 工作流和产品版本差异迁移为独立 Custom Skills。
 - 使用 `skills@1.5.23` 和 `--copy` 把公司 Skill 分发到项目 Agent 目录，并生成 `skills-lock.json`。
-- 公司默认 Workflow 保留完整阶段和自动路由，普通任务不依赖 `/flow`。
-- 新增 `company-trellis install` 与 `company-trellis update`，一次处理 Spec、Workflow 和 Skill。
+- 公司默认 Workflow 保留完整阶段和自动路由。
+- Spec 和 Workflow 回归官方 `trellis init`、`trellis update` 与 `trellis workflow` 命令。
 - Marketplace 索引移动到官方约定的 `marketplace/index.json`。
-- 完整性门禁增加安装器、3 个 Spec、2 个 Skill、真实安装和真实更新检查。
+- 完整性门禁检查 3 个 Spec、2 个 Skill、Workflow、官方 CLI 参数和 skills.sh 复制能力。
 - 中文文档明确安装产物应提交到业务项目，低 Node 版本使用者只需 Git 拉取。
 
 ### 兼容性
@@ -20,7 +20,7 @@
 - 最低验证 Trellis：`@mindfoldhq/trellis` 0.6.15。
 - 安装或更新要求 Node 22.20.0 或更高版本。
 - 安装后的 Spec、Workflow 和 Skill 是普通项目文件，使用者不需要 Node 22.20.0。
-- 本仓库从私有 Git 执行安装器，不发布 npm 包。
+- 本仓库不发布 npm 包，不提供 npm Git package 安装入口。
 
 ### 迁移
 
@@ -57,7 +57,7 @@
 ### 新增
 
 - 公司默认工作流 company-default。
-- 分发后自动设置 default_workflow，不依赖 /flow。
+- 分发后自动设置 default_workflow。
 - 完整迁移 Skill Share 中适合 Trellis 的任务路由、计划和七阶段工作方法。
 - 公司 Git 工作流和产品差异 Skill。
 - 公司工程、质量和安全 Spec。

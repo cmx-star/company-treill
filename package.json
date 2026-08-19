@@ -2,16 +2,12 @@
   "name": "company-trellis",
   "version": "2026.8.3",
   "private": true,
-  "description": "公司 Trellis 规范、工作流和 Skill 安装入口",
+  "description": "公司 Trellis Marketplace 与 Skill 分发仓库",
   "type": "module",
-  "bin": {
-    "company-trellis": "./bin/company-trellis.mjs"
-  },
   "engines": {
     "node": ">=22.20.0"
   },
   "files": [
-    "bin",
     "marketplace",
     "skills"
   ]
