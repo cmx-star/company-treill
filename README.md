@@ -95,6 +95,23 @@ registry:
 
 默认配置由 Registry 三方合并，不覆盖项目已经自行修改的其他配置。
 
+## 发布前完整性检查
+
+维护者生成 Manifest 后必须运行：
+
+~~~bash
+TEAM_VERSION=2026.08.1 node scripts/build-manifest.mjs
+node scripts/check-release.mjs
+~~~
+
+更新稳定 Channel 前运行：
+
+~~~bash
+node scripts/check-release.mjs --require-channel
+~~~
+
+检查脚本不依赖第三方包，会验证 Manifest 规范化、全量 SHA256、Workflow 阶段提取、状态块、默认配置、Skill frontmatter、版本文档和 Channel 指针。
+
 ## 维护边界
 
 - registry/.trellis/** 是公司发布内容。

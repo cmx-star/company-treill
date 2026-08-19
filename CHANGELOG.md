@@ -13,6 +13,7 @@
 - 公司工程、质量和安全 Spec。
 - 项目级 Spec 编写示例。
 - Team Manifest 构建脚本、使用指南和发布指南。
+- 无依赖的发布完整性检查脚本，覆盖 Manifest、Workflow、Skill、文档和 Channel。
 
 
 ### 兼容性

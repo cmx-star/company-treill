@@ -90,17 +90,23 @@ node scripts/build-manifest.mjs
 
 ~~~bash
 git diff --check
-node scripts/build-manifest.mjs
+node scripts/check-release.mjs
 ~~~
 
-还应检查：
+check-release.mjs 是提交前硬门禁，会自动检查：
 
-- Manifest 中每个路径都位于允许分发目录。
-- default_workflow 指向实际存在的 Workflow。
-- workflow-state 块完整且成对。
-- Skill frontmatter 包含 name 和 description。
-- 文档中的命令、版本和远端地址正确。
-- CHANGELOG 已记录兼容性、升级和回滚影响。
+- Manifest schema、字段规范化顺序和版本格式。
+- 分发目录中的文件是否全部进入 Manifest。
+- Manifest 中每个 SHA256 是否与当前文件一致。
+- default_workflow 是否指向实际存在的 Workflow。
+- Phase Index、三个 Phase 和 14 个步骤是否能按 Trellis 协议提取。
+- 6 组 workflow-state 是否完整、成对且唯一。
+- 是否残留“只有显式 /flow 才进入流程”的旧路由。
+- Skill 目录、name、description 和 frontmatter。
+- CHANGELOG、功能说明、使用指南和发布指南。
+- 可选签名和稳定 Channel 指针。
+
+该命令没有通过时不得提交固定版本。
 
 ## 固定版本发布
 
@@ -160,6 +166,12 @@ trellis team validate
 trellis team preview
 trellis update
 trellis team doctor
+~~~
+
+提交 Channel 前运行：
+
+~~~bash
+node scripts/check-release.mjs --require-channel
 ~~~
 
 ## 回滚
