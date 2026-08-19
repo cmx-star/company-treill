@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "teamVersion": "2026.08.1",
+  "core": {
+    "min": "0.6.15",
+    "maxExclusive": "0.8.0"
+  },
+  "summary": "公司默认工作流、Git、产品差异、工程质量和安全规范首版",
+  "compatibility": {
+    "platforms": [],
+    "notes": "内容为平台无关 Markdown，公司 Skill 由 Trellis 投影。"
+  },
+  "files": [
+    {
+      "path": ".trellis/skills/company-git-workflow/SKILL.md",
+      "sha256": "989b192c5c78adc58de02a1f88bdfa96eddcd44698c8e347588589ba83e5a0b3"
+    },
+    {
+      "path": ".trellis/skills/company-product-variants/SKILL.md",
+      "sha256": "d8d05713b8dcd7d0daea76a42824300a98f1fb9a66649d78c3f3b08dd0fb8600"
+    },
+    {
+      "path": ".trellis/spec/company/engineering.md",
+      "sha256": "a1370d9ab370a91966f3feb5fa61b02571c211b0951f79d011095d955c88f1be"
+    },
+    {
+      "path": ".trellis/spec/company/quality.md",
+      "sha256": "c0c8265642238e3c449ccac2c65f1dd8625b193f15bf91cd9f34ef312c4275fc"
+    },
+    {
+      "path": ".trellis/spec/company/security.md",
+      "sha256": "405d0343b842be048726928737ca4661304fb602c4a3c9bbc14fe75e7bfc2dd4"
+    },
+    {
+      "path": ".trellis/team-defaults.yaml",
+      "sha256": "1309940275e6a326063d85bf0c34510fc84c89d5404ddb63526a1b0f7daa0d1f"
+    },
+    {
+      "path": ".trellis/workflows/company-default.md",
+      "sha256": "26b654a07552957bf63b39f76baa19a7b8bac2ab4443bd5ffc663028b3d636e2"
+    }
+  ],
+  "delete": [],
+  "rename": [],
+  "deprecations": [],
+  "governance": {
+    "requireDeprecationNotices": true
+  }
+}

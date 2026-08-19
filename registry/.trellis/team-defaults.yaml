@@ -1,0 +1,4 @@
+default_workflow: company-default
+session_auto_commit: false
+codex:
+  dispatch_mode: inline
