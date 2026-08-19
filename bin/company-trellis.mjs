@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 const REGISTRY_SOURCE =
   "https://github.com/cmx-star/company-treill/tree/main/marketplace";
 const SKILLS_SOURCE = "https://github.com/cmx-star/company-treill.git";
-const TRELLIS_PACKAGE = "@mindfoldhq/trellis@latest";
 const SKILLS_PACKAGE = "skills@1.5.23";
 const COMPANY_SKILLS = [
   "company-git-workflow",
@@ -52,7 +51,7 @@ function printHelp() {
 选项：
   --project <目录>   目标项目，默认当前目录
   --agent <名称>     目标 AI 工具，可重复或使用逗号分隔
-  -y, --yes          非交互执行；install 时必须指定 --agent
+  -y, --yes          非交互执行；必须同时指定 --agent
   --dry-run          只显示将执行的命令
   -h, --help         显示帮助
 
@@ -135,24 +134,7 @@ function shouldUseShell(command) {
 function resolveTrellisCommand() {
   const configured = process.env.TRELLIS_CLI?.trim();
   if (!configured) {
-    const result = spawnSync("trellis", ["--version"], {
-      stdio: "ignore",
-      env: process.env,
-      shell: shouldUseShell("trellis"),
-    });
-    if (!result.error && result.status === 0) {
-      return { command: "trellis", prefix: [] };
-    }
-    return {
-      command: "npm",
-      prefix: [
-        "exec",
-        "--yes",
-        `--package=${TRELLIS_PACKAGE}`,
-        "--",
-        "trellis",
-      ],
-    };
+    return { command: "trellis", prefix: [] };
   }
   if (configured.endsWith(".js")) {
     return { command: process.execPath, prefix: [configured] };
@@ -234,19 +216,21 @@ function copyCompanyDistribution(options) {
 }
 
 function install(options) {
-  const args = ["init"];
-  if (options.yes) {
-    if (options.agents.length === 0) {
-      throw new Error("非交互安装必须至少指定一个 --agent。");
-    }
-    args.push("--yes", ...trellisPlatformArgs(options.agents));
+  if (options.yes && options.agents.length === 0) {
+    throw new Error("非交互安装必须至少指定一个 --agent。");
   }
+  const args = ["init"];
+  if (options.yes) args.push("--yes");
+  if (options.agents.length > 0) args.push(...trellisPlatformArgs(options.agents));
   runTrellis(args, options);
   copyCompanyDistribution(options);
   installSkills(options);
 }
 
 function update(options) {
+  if (options.yes && options.agents.length === 0) {
+    throw new Error("非交互更新必须至少指定一个 --agent。");
+  }
   runTrellis(["update", "--skip-all"], options);
   copyCompanyDistribution(options);
   installSkills(options);
