@@ -46,10 +46,10 @@ company-trellis/
 在业务项目根目录执行：
 
 ~~~bash
-fnm exec --using=22.20.0 -- npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent codex --yes
+npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent codex --agent cursor --yes
 ~~~
 
-把 `codex` 替换为目标 Agent；也可以重复传入 `--agent`。安装器会一次完成 Spec、Workflow 和 Skill 三部分分发。
+按项目实际使用的工具传入一个或多个 `--agent`；不使用 Cursor 时可以删除 `--agent cursor`。安装器会一次完成 Spec、Workflow 和 Skill 三部分分发。
 
 安装后至少应看到：
 
@@ -70,7 +70,7 @@ skills-lock.json
 在业务项目根目录执行：
 
 ~~~bash
-fnm exec --using=22.20.0 -- npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis update --agent codex --yes
+npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis update --agent codex --agent cursor --yes
 ~~~
 
 更新会刷新公司 Spec、强制替换公司 Workflow，并重新复制公司 Skill。执行后必须检查 Git diff，确认项目级规范和本地项目约束没有被误改，再提交更新结果。
@@ -89,7 +89,7 @@ npx --yes skills@1.5.23 add git@github.com:cmx-star/company-treill.git --skill c
 维护者完成本次全部修改后，只运行一次完整门禁：
 
 ~~~bash
-fnm exec --using=22.20.0 -- node scripts/check-release.mjs
+node scripts/check-release.mjs
 ~~~
 
 门禁检查 Marketplace、3 个公司 Spec、846 行完整 Workflow、2 个公司 Skill、安装器、中文文档和 Git diff，并在临时项目中真实执行安装与更新。
@@ -97,7 +97,7 @@ fnm exec --using=22.20.0 -- node scripts/check-release.mjs
 只排查静态结构时可以运行：
 
 ~~~bash
-fnm exec --using=22.20.0 -- node scripts/check-release.mjs --static-only
+node scripts/check-release.mjs --static-only
 ~~~
 
 静态模式不能作为发版通过证据。
