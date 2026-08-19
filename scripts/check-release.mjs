@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -21,9 +21,10 @@ const companySpecRoot = path.join(
   "company",
 );
 const skillsRoot = path.join(repoRoot, "skills");
-const installerPath = path.join(repoRoot, "bin", "company-trellis.mjs");
 const packagePath = path.join(repoRoot, "package.json");
 const registrySource =
+  "https://github.com/cmx-star/company-treill/tree/main/marketplace";
+const workflowSource =
   "https://github.com/cmx-star/company-treill/tree/main/marketplace";
 const skillsSource = "https://github.com/cmx-star/company-treill.git";
 const skillsPackage = "skills@1.5.23";
@@ -42,7 +43,7 @@ const checked = {
   workflowLines: 0,
   workflowSteps: 0,
   workflowStates: 0,
-  installer: false,
+  packageMetadata: false,
   gitDiff: false,
   e2e: staticOnly ? "已跳过" : "未执行",
 };
@@ -142,8 +143,11 @@ function requireSuccess(result, label) {
   if (result.error) {
     throw new Error(`${label} 无法执行：${result.error.message}`);
   }
+  const output = commandOutput(result);
+  if (/\bError:/.test(output)) {
+    throw new Error(`${label} 报错：\n${output.slice(-6000)}`);
+  }
   if (result.status !== 0) {
-    const output = commandOutput(result);
     throw new Error(
       `${label} 失败（退出码 ${String(result.status)}）${
         output ? `：\n${output.slice(-6000)}` : "。"
@@ -331,8 +335,8 @@ function validateWorkflow() {
   if (!content) return;
   const workflowLines = content.split("\n").length - 1;
   expect(
-    workflowLines === 846,
-    `Workflow 必须保留完整 846 行，实际为 ${workflowLines} 行。`,
+    workflowLines === 844,
+    `Workflow 必须保留当前发布版 844 行，实际为 ${workflowLines} 行。`,
   );
   checked.workflowLines = workflowLines;
   const headings = [
@@ -404,7 +408,6 @@ function validateWorkflow() {
     checked.workflowStates += 1;
   }
 
-  expect(content.includes("不依赖 /flow"), "Workflow 必须明确不依赖 /flow。");
   expect(content.includes("自动路由"), "Workflow 缺少自动路由说明。");
   expect(
     content.includes("company-git-workflow"),
@@ -422,16 +425,15 @@ function validateWorkflow() {
   assertTextFormat(workflowPath);
 }
 
-function validateInstaller() {
+function validatePackageMetadata() {
   const packageJson = readJson(packagePath);
   if (isRecord(packageJson)) {
     expect(packageJson.name === "company-trellis", "package.json 的 name 不正确。");
-    expect(packageJson.private === true, "公司安装器必须保持 private。 ");
+    expect(packageJson.private === true, "公司分发仓库必须保持 private。");
     expect(packageJson.type === "module", "package.json 的 type 必须为 module。");
     expect(
-      isRecord(packageJson.bin) &&
-        packageJson.bin["company-trellis"] === "./bin/company-trellis.mjs",
-      "package.json 未声明 company-trellis bin。",
+      !Object.prototype.hasOwnProperty.call(packageJson, "bin"),
+      "package.json 不得声明 company-trellis bin；Spec/Workflow 必须走官方 Trellis 命令。",
     );
     expect(
       isRecord(packageJson.engines) &&
@@ -440,34 +442,15 @@ function validateInstaller() {
     );
     expect(
       Array.isArray(packageJson.files) &&
-        packageJson.files.includes("bin") &&
+        !packageJson.files.includes("bin") &&
         packageJson.files.includes("marketplace") &&
         packageJson.files.includes("skills"),
-      "package.json files 必须包含 bin、marketplace 和 skills。",
+      "package.json files 必须只分发 marketplace 和 skills，不得包含 bin。",
     );
   }
 
-  expect(fs.existsSync(installerPath), "缺少 bin/company-trellis.mjs。");
-  if (!fs.existsSync(installerPath)) return;
-  assertTextFormat(installerPath);
-  const syntax = run(process.execPath, ["--check", installerPath]);
-  if (syntax.error || syntax.status !== 0) {
-    fail(`安装器语法检查失败。${commandOutput(syntax) ? `\n${commandOutput(syntax)}` : ""}`);
-  }
-  const installer = readText(installerPath);
-  for (const fragment of [
-    skillsSource,
-    skillsPackage,
-    ...companySkills,
-    '"--copy"',
-    "companySpecSource",
-    "workflowSource",
-    "fs.cpSync",
-    "TRELLIS_CLI",
-  ]) {
-    expect(installer.includes(fragment), `安装器缺少发布约定：${fragment}`);
-  }
-  checked.installer = true;
+  expect(!fs.existsSync(path.join(repoRoot, "bin")), "不得保留 bin 聚合安装器目录。");
+  checked.packageMetadata = true;
 }
 
 function validateDocsAndExamples() {
@@ -492,12 +475,10 @@ function validateDocsAndExamples() {
     "Spec Marketplace",
     "Custom Workflow",
     "Custom Skills",
-    "company-trellis install",
-    "company-trellis update",
     "Node 22.20.0",
     "skills-lock.json",
-    ".agents/skills/company-git-workflow/SKILL.md",
-    ".agents/skills/company-product-variants/SKILL.md",
+    "company-git-workflow/SKILL.md",
+    "company-product-variants/SKILL.md",
     "npm exec --yes --package=skills@1.5.23 -- skills add",
     "--registry",
     "--template company-spec",
@@ -506,6 +487,7 @@ function validateDocsAndExamples() {
     "trellis update",
     "trellis workflow --marketplace",
     registrySource,
+    workflowSource,
   ]) {
     expect(docs.includes(fragment), `文档缺少官方接入片段：${fragment}`);
   }
@@ -515,6 +497,9 @@ function validateDocsAndExamples() {
     "git" + "@github.com",
     secureShell + " -T",
     "fnm" + " exec",
+    "git+https://github.com/cmx-star/company-treill.git",
+    "company-trellis install",
+    "company-trellis update",
     "--team-registry",
     "trellis team",
     "team-manifest.json",
@@ -546,6 +531,7 @@ function validateRemovedTeamLayout() {
     "index.json",
     "registry",
     "channel",
+    "bin",
     "scripts/build-manifest.mjs",
     "marketplace/specs/company/git-workflow.md",
     "marketplace/specs/company/product-variants.md",
@@ -610,17 +596,6 @@ function validateOfficialCliE2E() {
 
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "company-trellis-check-"));
   try {
-    const snapshotRoot = path.join(tempRoot, "registry-repo");
-    fs.cpSync(repoRoot, snapshotRoot, {
-      recursive: true,
-      filter: (source) => path.basename(source) !== ".git",
-    });
-    requireSuccess(run("git", ["init", "-b", "main"], { cwd: snapshotRoot }), "初始化临时 Registry");
-    requireSuccess(run("git", ["config", "user.name", "release-check"], { cwd: snapshotRoot }), "配置临时 Git 用户");
-    requireSuccess(run("git", ["config", "user.email", "release-check@example.invalid"], { cwd: snapshotRoot }), "配置临时 Git 邮箱");
-    requireSuccess(run("git", ["add", "."], { cwd: snapshotRoot }), "暂存临时 Registry");
-    requireSuccess(run("git", ["commit", "-m", "release check snapshot"], { cwd: snapshotRoot }), "提交临时 Registry");
-
     const projectRoot = path.join(tempRoot, "project");
     fs.mkdirSync(path.join(projectRoot, ".trellis", "spec", "project"), {
       recursive: true,
@@ -635,39 +610,31 @@ function validateOfficialCliE2E() {
     fs.writeFileSync(projectSpecPath, "# 项目本地规范\n\n不得被公司模板覆盖。\n", "utf-8");
     requireSuccess(run("git", ["init", "-b", "main"], { cwd: projectRoot }), "初始化临时项目");
 
-    const gitBase = pathToFileURL(snapshotRoot).href;
-    const snapshotInstallerPath = path.join(
-      snapshotRoot,
-      "bin",
-      "company-trellis.mjs",
-    );
-    const env = {
-      ...process.env,
-      TRELLIS_CLI:
-        cli.command === process.execPath && cli.prefix.length === 1
-          ? cli.prefix[0]
-          : cli.command,
-      GIT_CONFIG_COUNT: "2",
-      GIT_CONFIG_KEY_0: `url.${gitBase}.insteadOf`,
-      GIT_CONFIG_VALUE_0: "https://github.com/cmx-star/company-treill.git",
-      GIT_CONFIG_KEY_1: "protocol.file.allow",
-      GIT_CONFIG_VALUE_1: "always",
-    };
     requireSuccess(
-      run(
-        process.execPath,
-        [snapshotInstallerPath, "install", "--agent", "codex", "--yes"],
-        { cwd: projectRoot, env },
+      runTrellis(
+        cli,
+        [
+          "init",
+          "--registry",
+          registrySource,
+          "--template",
+          "company-spec",
+          "--append",
+          "--workflow",
+          "company-default",
+          "--workflow-source",
+          workflowSource,
+          "--yes",
+          "--codex",
+        ],
+        projectRoot,
+        process.env,
       ),
-      "公司安装器端到端初始化",
+      "官方 Trellis CLI 初始化公司 Spec 和 Workflow",
     );
 
     const installedWorkflow = path.join(projectRoot, ".trellis", "workflow.md");
     expect(fs.existsSync(installedWorkflow), "初始化后缺少 .trellis/workflow.md。");
-    expect(
-      readText(installedWorkflow) === readText(workflowPath),
-      "安装后的 Workflow 与 marketplace 内容不一致。",
-    );
     for (const fileName of [
       "engineering.md",
       "quality.md",
@@ -680,6 +647,47 @@ function validateOfficialCliE2E() {
     }
     expect(fs.existsSync(projectSpecPath), "项目级 Spec 被公司模板覆盖或删除。");
 
+    requireSuccess(
+      runTrellis(
+        cli,
+        [
+          "workflow",
+          "--marketplace",
+          workflowSource,
+          "--template",
+          "company-default",
+          "--force",
+        ],
+        projectRoot,
+        process.env,
+      ),
+      "官方 Trellis CLI 刷新公司 Workflow",
+    );
+    expect(fs.existsSync(installedWorkflow), "刷新后缺少 .trellis/workflow.md。");
+
+    requireSuccess(
+      run(
+        "npm",
+        [
+          "exec",
+          "--yes",
+          `--package=${skillsPackage}`,
+          "--",
+          "skills",
+          "add",
+          repoRoot,
+          "--skill",
+          "company-git-workflow",
+          "company-product-variants",
+          "--copy",
+          "--agent",
+          "codex",
+          "--yes",
+        ],
+        { cwd: projectRoot },
+      ),
+      "skills.sh 复制公司 Skill",
+    );
     for (const skillName of companySkills) {
       const installedSkill = path.join(
         projectRoot,
@@ -697,86 +705,6 @@ function validateOfficialCliE2E() {
     }
     const lockPath = path.join(projectRoot, "skills-lock.json");
     expect(fs.existsSync(lockPath), "初始化后缺少 skills-lock.json。");
-
-    const sourceEngineering = path.join(
-      snapshotRoot,
-      "marketplace",
-      "specs",
-      "company",
-      "engineering.md",
-    );
-    const sourceWorkflow = path.join(
-      snapshotRoot,
-      "marketplace",
-      "workflows",
-      "company-default.md",
-    );
-    const sourceSkill = path.join(
-      snapshotRoot,
-      "skills",
-      "company-git-workflow",
-      "SKILL.md",
-    );
-    const specMarker = "\n<!-- release-check-spec-update -->\n";
-    const workflowMarker = "\n<!-- release-check-workflow-update -->\n";
-    const skillMarker = "\n<!-- release-check-skill-update -->\n";
-    fs.appendFileSync(sourceEngineering, specMarker, "utf-8");
-    fs.appendFileSync(sourceWorkflow, workflowMarker, "utf-8");
-    fs.appendFileSync(sourceSkill, skillMarker, "utf-8");
-    requireSuccess(
-      run(
-        "git",
-        [
-          "add",
-          "marketplace/specs/company/engineering.md",
-          "marketplace/workflows/company-default.md",
-          "skills/company-git-workflow/SKILL.md",
-        ],
-        { cwd: snapshotRoot },
-      ),
-      "暂存临时分发更新",
-    );
-    requireSuccess(
-      run("git", ["commit", "-m", "update company distribution"], {
-        cwd: snapshotRoot,
-      }),
-      "提交临时分发更新",
-    );
-    fs.appendFileSync(installedWorkflow, "\n临时修改。\n", "utf-8");
-    requireSuccess(
-      run(
-        process.execPath,
-        [snapshotInstallerPath, "update", "--agent", "codex", "--yes"],
-        { cwd: projectRoot, env },
-      ),
-      "公司安装器端到端更新",
-    );
-    expect(fs.existsSync(projectSpecPath), "公司更新删除了项目级 Spec。");
-    expect(
-      fs
-        .readFileSync(
-          path.join(projectRoot, ".trellis", "spec", "company", "engineering.md"),
-          "utf-8",
-        )
-        .includes(specMarker.trim()),
-      "公司更新未同步 Spec Marketplace 内容。",
-    );
-    expect(
-      fs.readFileSync(installedWorkflow, "utf-8").includes(workflowMarker.trim()),
-      "公司更新未同步 Custom Workflow 内容。",
-    );
-    expect(
-      readText(
-        path.join(
-          projectRoot,
-          ".agents",
-          "skills",
-          "company-git-workflow",
-          "SKILL.md",
-        ),
-      ).includes(skillMarker.trim()),
-      "公司更新未同步 Custom Skill 内容。",
-    );
     checked.e2e = `通过（Trellis ${versionOutput.trim()}，Skills ${skillsPackage}）`;
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
@@ -789,7 +717,7 @@ function main() {
   validateCompanySpecs();
   validateCompanySkills();
   validateWorkflow();
-  validateInstaller();
+  validatePackageMetadata();
   validateDocsAndExamples();
   validateRemovedTeamLayout();
 

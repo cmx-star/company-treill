@@ -1,8 +1,8 @@
 # 功能说明
 
-## 三条官方分发路径
+## 三条分发路径
 
-本仓库没有自造 Team Manifest、Channel 或另一套运行时，而是组合三个独立能力。
+本仓库维护 Trellis 和 skills.sh 已经支持的三类内容。
 
 ### Spec Marketplace
 
@@ -14,11 +14,11 @@
 | quality.md | 验证、Bug 根因、审查、完成条件和未验证结果说明 |
 | security.md | 密钥、权限、数据、配置和供应链边界 |
 
-Spec Marketplace 的本质是把模板复制进项目，作为项目规范的起点。安装后的文件属于业务项目，不是远程 Wiki 或运行时网络引用。安装器从当前 Git 包本地复制公司 Spec，后续通过 `company-trellis update` 刷新已分发内容；每次更新仍应作为普通项目文件变更进行审查和提交。
+Spec Marketplace 走 Trellis 官方 registry。首次接入使用 `trellis init --registry ... --template company-spec --append`；后续更新仍使用官方 Trellis 命令刷新公司 Spec。安装后的文件属于业务项目，应作为普通项目文件变更审查和提交。
 
 ### Custom Workflow
 
-`company-default` 按官方 Custom Workflow marketplace 结构维护，并由安装器复制为项目唯一的 `.trellis/workflow.md`。
+`company-default` 按官方 Custom Workflow marketplace 结构维护。首次接入通过 `trellis init --workflow company-default --workflow-source ...` 安装；更新时通过 `trellis workflow --marketplace ... --template company-default --force` 刷新。
 
 工作流保留完整的定界、方案、切分、实施、诊断、验证、审查和收尾阶段，并根据请求自动路由：
 
@@ -29,11 +29,15 @@ frame -> solution -> slice -> build -> verify -> review -> finish
                      +----------+
 ~~~
 
-普通任务会直接进入该工作流，不依赖 `/flow`、关键词或另一套 Flow Skill。只读问题不会机械创建 Task；多文件、迁移、公共契约、依赖和高风险任务才进入完整阶段。
+普通任务会直接进入该工作流。只读问题不会机械创建 Task；多文件、迁移、公共契约、依赖和高风险任务才进入完整阶段。
 
 ### Custom Skills
 
-Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本仓库按照官方 Custom Skills 目录约定保存 Skill，再使用 skills.sh 的 `npx skills add` 复制到项目平台目录。
+Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本仓库只保存 Skill 源文件，安装和更新都交给 skills.sh：
+
+~~~bash
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+~~~
 
 当前发布两个公司 Skill：
 
@@ -69,19 +73,17 @@ Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本�
 
 ## 更新模型
 
-`company-trellis update` 顺序执行：
+公司更新拆成三段，分别使用官方能力：
 
-1. `trellis update --skip-all`，刷新 Trellis 官方管理内容。
-2. 从当前 Git 包复制 `.trellis/spec/company/` 和 `.trellis/workflow.md`。
-3. `npm exec --yes --package=skills@1.5.23 -- skills add ... --copy --yes`，通过 HTTPS Git 重新复制两个公司 Skill。
+1. `trellis update --skip-all` 和 `trellis init --registry ... --template company-spec --append`，刷新 Trellis 官方管理内容和公司 Spec。
+2. `trellis workflow --marketplace ... --template company-default --force`，刷新公司 Workflow。
+3. `npm exec --yes --package=skills@1.5.23 -- skills add ... --copy`，刷新公司 Skill。
 
 公司 Workflow 更新会覆盖项目当前 `.trellis/workflow.md`。项目若需要长期定制 Workflow，应建立经过批准的项目变体，不能把本地修改留在公司分发副本中等待下次被覆盖。
 
 ## 明确不提供
 
 - 不修改或重新发布 `@mindfoldhq/trellis`。
-- 不要求把 `company-trellis` 发布到 npm Registry。
-- 不引入 WorkItem、Delivery、Run 或 Conversation 运行时。
-- 不引入独立 checkpoint、receipt、Stop Hook 或 `/flow` 命令。
+- 不提供自写聚合安装器。
 - 不自动覆盖 `.trellis/spec/project/`。
 - 不把 Git 和产品差异规则伪装成 Spec。

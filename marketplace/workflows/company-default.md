@@ -8,7 +8,7 @@
 .trellis/workflow.md
 ~~~
 
-安装后，开发任务自动进入本工作流，不依赖 /flow、关键词、平台命令或额外的 Flow Skill。
+安装后，开发任务自动进入本工作流。
 
 本工作流负责：
 
@@ -24,7 +24,6 @@
 - .usr-ai-frontend 目录。
 - WorkItem、Delivery、Run、Conversation 模型。
 - 独立 JavaScript CLI、checkpoint、receipt 或 Stop Hook。
-- 独立 /flow 命令和拆分的 flow-* Skill。
 - 第二套平台适配、Task 面板或 Question 状态系统。
 
 ## 2. 权威来源与优先级
@@ -245,7 +244,6 @@ Phase 3: Finish  -> 上下文演进、已授权 Git/发布动作、结果审核�
 小型可逆修改使用 frame -> build -> verify -> review 的紧凑路径。
 多文件、跨模块、公共契约、迁移、依赖、安全或长时任务必须创建 Trellis Task，并从 Phase 1 开始。
 写入前读取公司与项目规范、检查 Git 状态、说明范围和验证，并取得公司规则要求的批准。
-不需要 /flow 或其他命令入口。
 [/workflow-state:no_task]
 
 [workflow-state:planning]

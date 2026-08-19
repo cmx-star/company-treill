@@ -1,10 +1,10 @@
 # 项目接入与日常使用
 
-## 谁需要运行安装器
+## 谁需要运行接入命令
 
-每个业务项目只需要一名维护者或有权限的开发者运行安装和更新命令，然后把生成文件提交到业务项目 Git。
+每个业务项目只需要一名维护者或有权限的开发者运行接入和更新命令，然后把生成文件提交到业务项目 Git。
 
-运行安装器的机器需要 Node 22.20.0 或更高版本。其他成员拉取已经提交的 `.trellis/`、Agent Skill 和 `skills-lock.json` 后即可使用，不受安装器 Node 版本限制。
+运行接入和更新命令的机器需要 Node 22.20.0 或更高版本。其他成员拉取已经提交的 `.trellis/`、Agent Skill 和 `skills-lock.json` 后即可使用，不受接入机器的 Node 版本限制。
 
 ## 前置检查
 
@@ -20,34 +20,27 @@ git ls-remote https://github.com/cmx-star/company-treill.git HEAD
 
 当前最低验证 Trellis 版本为 `@mindfoldhq/trellis` 0.6.15。帮助中应包含 `init --registry`、`init --workflow-source` 和 `workflow --marketplace`。
 
-## 首次安装
+## 首次接入
 
-在业务项目根目录执行：
-
-~~~bash
-npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis install
-~~~
-
-安装器会交互询问项目要安装到哪个 Agent。当前支持的 Agent 名称包括：
-
-~~~text
-codex
-claude-code
-cursor
-opencode
-gemini-cli
-github-copilot
-antigravity
-pi
-~~~
-
-需要同时安装到多个工具时重复传入 `--agent`：
+在业务项目根目录先安装公司 Spec 和 Workflow：
 
 ~~~bash
-npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent <名称> --agent <名称> --yes
+trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
 ~~~
 
-非交互命令必须由执行者明确传入实际使用的 `--agent <名称>` 和 `--yes`；公司仓库不预设编辑器或 Agent。
+再安装公司 Skill：
+
+~~~bash
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+~~~
+
+`skills add` 默认交互选择项目或全局范围以及目标 Agent。需要非交互执行时，由执行者明确传入实际使用的 `--agent <名称>` 和 `--yes`：
+
+~~~bash
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy --agent <名称> --yes
+~~~
+
+公司仓库不预设编辑器或 Agent。需要同时安装到多个工具时，按 skills.sh 规则重复传入 `--agent <名称>`。
 
 ## 安装结果
 
@@ -64,8 +57,6 @@ skills-lock.json
 ~~~
 
 如果交互时选择 `codex`，Agent Skill 目录通常是 `.agents/skills/`，对应结果为 `.agents/skills/company-git-workflow/SKILL.md` 和 `.agents/skills/company-product-variants/SKILL.md`。
-
-公司 Spec 与 Workflow 由 `company-trellis` 从当前 Git 包复制，后续也通过 `company-trellis update` 刷新；`.trellis/config.yaml` 不需要记录公司 Registry 来源。
 
 检查命令：
 
@@ -86,7 +77,7 @@ Get-ChildItem .trellis\spec\company,"<Agent Skill 目录>" -Recurse -File; Test-
 
 ## 日常使用
 
-接入后正常描述开发任务，不需要输入 `/flow`。Trellis 会注入 `.trellis/workflow.md`，工作流会读取公司 Spec、项目规范和当前任务上下文，并按任务风险选择紧凑路径或完整路径。公司安装器在接入和更新时从已下载的 Git 包本地复制公司 Spec 与 Workflow，不依赖运行时访问 GitHub raw 文件。
+接入后正常描述开发任务。Trellis 会注入 `.trellis/workflow.md`，工作流会读取公司 Spec、项目规范和当前任务上下文，并按任务风险选择紧凑路径或完整路径。
 
 Git、提交、合并、Tag、Hotfix、推送和发布请求会加载 `company-git-workflow`。私有部署、品牌、市场、外部服务、本地化和版本能力请求会加载 `company-product-variants`。
 
@@ -112,17 +103,28 @@ Git、提交、合并、Tag、Hotfix、推送和发布请求会加载 `company-g
 - 业务契约、数据语义和敏感区域。
 - 测试分层及需要扩大验证的条件。
 
-公司安装器只处理 `.trellis/spec/company/`，不会分发或删除项目级示例。
+公司 Spec 只处理 `.trellis/spec/company/`，不会分发或删除项目级示例。项目自己的演进内容应放在 `.trellis/spec/project/` 或团队约定的项目文档中。
 
 ## 获取公司更新
 
-在业务项目根目录执行：
+在业务项目根目录先刷新官方 Trellis 管理内容和公司 Spec：
 
 ~~~bash
-npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis update
+trellis update --skip-all
+trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append
 ~~~
 
-更新同样默认交互选择 Agent；自动化环境由执行者追加实际使用的 `--agent <名称>` 和 `--yes`。
+再刷新公司 Workflow：
+
+~~~bash
+trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-default --force
+~~~
+
+最后刷新公司 Skill：
+
+~~~bash
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+~~~
 
 更新完成后检查：
 
@@ -132,33 +134,15 @@ npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#mai
 4. `skills-lock.json` 已同步。
 5. `.trellis/spec/project/` 未被删除或覆盖。
 
-## 分步排查命令
-
-需要排查某一分发路径时，可以绕过安装器分别运行。默认接入仍优先使用 `company-trellis install`。
-
-Spec Marketplace 与 Custom Workflow 兼容性检查：
-
-~~~bash
-trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
-trellis update --skip-all
-trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-default --force
-~~~
-
-Custom Skills：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
-~~~
-
 ## 固定版本
 
-需要严格复现时，把安装包来源的 `#main` 替换为完整 commit SHA。只有在单独排查 Marketplace 兼容性命令时，才同步固定 Marketplace 来源版本。
+日常接入使用 `main`。需要稳定发布时，由维护者打 Git tag，再把上述 HTTPS 来源中的 `main` 替换为已验证 tag。不要把 npm Git package 加完整 commit SHA 作为推荐安装方式。
 
 ## 常见问题
 
 ### Node 版本不足
 
-Node 22.20.0 只限制安装或更新动作。由一台符合要求的机器执行并提交生成文件后，其他成员只需 Git 拉取。
+Node 22.20.0 只限制接入或更新动作。由一台符合要求的机器执行并提交生成文件后，其他成员只需 Git 拉取。
 
 ### Trellis 不认识参数
 

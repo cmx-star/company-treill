@@ -8,15 +8,14 @@
 2. Custom Workflow：`company-default`，安装为 `.trellis/workflow.md`。
 3. Custom Skills：通过 skills.sh 复制到项目的 Agent Skill 目录。
 
-稳定安装来源为：
+稳定来源为：
 
 ~~~text
-https://github.com/cmx-star/company-treill.git#main
+https://github.com/cmx-star/company-treill/tree/main/marketplace
+https://github.com/cmx-star/company-treill.git
 ~~~
 
-`marketplace/` 仍按 Trellis Marketplace 协议维护，随 Git 包一起分发；安装器从当前 Git 包本地复制公司 Spec 与 Workflow，避免把业务项目接入绑定到 GitHub raw 文件读取。
-
-这里的“发布”是完整检查通过后提交并推送公司仓库 `main`。`package.json` 只提供可从私有 Git 执行的安装入口，保持 `private: true`，不要求发布到 npm Registry。
+这里的“发布”是完整检查通过后提交并推送公司仓库 `main`，或为稳定版本创建 Git tag。`package.json` 只保留仓库元数据，保持 `private: true`。
 
 ## 维护位置
 
@@ -30,7 +29,6 @@ https://github.com/cmx-star/company-treill.git#main
 | 公司 Git Skill | skills/company-git-workflow/SKILL.md |
 | 公司产品差异 Skill | skills/company-product-variants/SKILL.md |
 | 项目规范示例 | examples/project-spec/ |
-| 一次安装入口 | bin/company-trellis.mjs |
 | 发布完整性门禁 | scripts/check-release.mjs |
 
 ## Marketplace 协议
@@ -89,10 +87,9 @@ env TRELLIS_CLI=/absolute/path/to/trellis.js node scripts/check-release.mjs
 - 846 行 Workflow 的 Phase Index、3 个 Phase、14 个步骤和 6 个状态块。
 - Workflow 是否按条件加载两个公司 Skill。
 - 两个 Skill 的目录、frontmatter、名称和说明。
-- `package.json`、Node 22.20.0、`skills@1.5.23` 和安装器约定。
+- `package.json`、Node 22.20.0、`skills@1.5.23` 和无聚合安装器约定。
 - README、功能、使用、发布和项目规范示例。
-- 临时项目中的真实安装、真实更新和项目级规范保留。
-- `.agents/skills/` 与 `skills-lock.json` 是否正确生成和更新。
+- 临时项目中的官方 Trellis CLI 初始化和 skills.sh 安装能力。
 
 静态排查命令：
 
@@ -104,34 +101,34 @@ node scripts/check-release.mjs --static-only
 
 ## 发布步骤
 
-1. 修改 Spec、Workflow、Skill 或安装器。
+1. 修改 Spec、Workflow、Skill 或文档。
 2. 同步 README、专项文档和 `CHANGELOG.md`。
 3. 运行一次完整门禁并确认通过。
 4. 检查 `git status`、最终 diff 和删除文件，只保留本次范围。
 5. 获得独立的提交和推送授权。
 6. 统一提交并推送 `main`。
-7. 从远端 Git 包在临时业务项目再执行一次安装命令。
+7. 从远端 HTTPS 来源在临时业务项目再执行一次官方接入命令。
 
 远端检查：
 
 ~~~bash
-npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent <名称> --yes
+trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy --agent <名称> --yes
 ~~~
 
 验收至少包括：
 
 - `.trellis/spec/company/` 中存在 3 份公司 Spec。
 - `.trellis/workflow.md` 与远端发布内容一致。
-- `.agents/skills/company-git-workflow/SKILL.md` 存在。
-- `.agents/skills/company-product-variants/SKILL.md` 存在。
+- `<Agent Skill 目录>/company-git-workflow/SKILL.md` 存在。
+- `<Agent Skill 目录>/company-product-variants/SKILL.md` 存在。
 - `skills-lock.json` 存在。
 - `.trellis/spec/project/` 中已有项目规范仍然存在。
-- 普通开发任务不需要 `/flow` 即可进入公司工作流。
 
 ## 兼容性
 
 - 最低验证 Trellis：`@mindfoldhq/trellis` 0.6.15。
-- 安装器和 `skills@1.5.23`：Node 22.20.0 或更高版本。
+- 接入命令和 `skills@1.5.23`：Node 22.20.0 或更高版本。
 - 分发结果：普通 Markdown 和锁文件，拉取后不要求 Node 22.20.0。
 - 使用 `--copy`，避免符号链接在 Windows 和业务项目 Git 中产生差异。
 
@@ -141,7 +138,7 @@ npm exec --yes --package="git+https://github.com/cmx-star/company-treill.git#mai
 
 发布内容有问题时，优先在本仓库创建修复或回滚提交，再让业务项目重新执行更新。
 
-需要立即固定旧版本时，把 Git package 来源固定到一个已验证 commit SHA。不要通过删除整个 `.trellis/`、覆盖项目规范或安装未发布的 Trellis 版本回滚。
+需要立即固定旧版本时，使用已经验证过的 Git tag。不要通过删除整个 `.trellis/`、覆盖项目规范、安装未发布的 Trellis 版本或 npm Git package commit SHA 回滚。
 
 ## 官方参考
 
