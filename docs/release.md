@@ -10,10 +10,11 @@
 业务项目通常绑定：
 
 ~~~text
-gh:cmx-star/company-treill/channel
+git@github.com:cmx-star/company-treill/channel#main
 ~~~
 
 Trellis 先读取稳定 Channel，再解析到完整 40 位 commit SHA。
+维护者和业务项目都需要配置可访问该 GitHub 私有仓库的 SSH 密钥。
 
 ## 发布前修改
 
@@ -86,15 +87,15 @@ node scripts/build-manifest.mjs
 
 不得提交私钥、PEM、令牌或真实凭据。
 
-## 静态检查
+## 提交前完整性门禁
 
 ~~~bash
-git diff --check
 node scripts/check-release.mjs
 ~~~
 
 check-release.mjs 是提交前硬门禁，会自动检查：
 
+- 当前 Git 差异是否存在行尾空白、冲突标记或其他格式错误。
 - Manifest schema、字段规范化顺序和版本格式。
 - 分发目录中的文件是否全部进入 Manifest。
 - Manifest 中每个 SHA256 是否与当前文件一致。
@@ -117,7 +118,7 @@ check-release.mjs 是提交前硬门禁，会自动检查：
 ~~~yaml
 registry:
   team:
-    source: gh:cmx-star/company-treill/registry#<完整 commit SHA>
+    source: git@github.com:cmx-star/company-treill/registry#<完整 commit SHA>
 ~~~
 
 4. 运行：
@@ -153,7 +154,7 @@ channel/.trellis/team-channel.json
 ~~~json
 {
   "schemaVersion": 1,
-  "source": "gh:cmx-star/company-treill/registry#<完整 commit SHA>"
+  "source": "git@github.com:cmx-star/company-treill/registry#<完整 commit SHA>"
 }
 ~~~
 
@@ -168,11 +169,13 @@ trellis update
 trellis team doctor
 ~~~
 
-提交 Channel 前运行：
+准备好 Channel、文档和脚本的全部变化后，提交前只运行一次完整门禁：
 
 ~~~bash
 node scripts/check-release.mjs --require-channel
 ~~~
+
+门禁通过后再统一提交和推送，不使用增量修复提交试跑检查。
 
 ## 回滚
 

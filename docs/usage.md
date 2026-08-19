@@ -16,15 +16,17 @@ trellis --help
 在业务项目根目录执行：
 
 ~~~bash
-trellis init --team-registry gh:cmx-star/company-treill/channel
+trellis init --team-registry 'git@github.com:cmx-star/company-treill/channel#main'
 ~~~
+
+公司 Registry 使用 GitHub SSH 访问。执行前需要配置可访问该私有仓库的 SSH 密钥。
 
 如果项目已经初始化 Trellis，在 .trellis/config.yaml 中增加：
 
 ~~~yaml
 registry:
   team:
-    source: gh:cmx-star/company-treill/channel
+    source: git@github.com:cmx-star/company-treill/channel#main
 ~~~
 
 然后运行：
@@ -153,7 +155,7 @@ team-defaults.yaml 使用三方合并：
 ~~~yaml
 registry:
   team:
-    source: gh:cmx-star/company-treill/registry#0123456789abcdef0123456789abcdef01234567
+    source: git@github.com:cmx-star/company-treill/registry#0123456789abcdef0123456789abcdef01234567
 ~~~
 
 固定来源必须使用完整 40 位 commit SHA。

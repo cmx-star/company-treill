@@ -33,6 +33,7 @@ const checked = {
   workflowSteps: 0,
   workflowStates: 0,
   signatures: 0,
+  gitDiff: false,
 };
 
 function relative(filePath) {
@@ -731,6 +732,26 @@ function runGit(args) {
   });
 }
 
+function validateGitDiff() {
+  const result = runGit(["diff", "--check", "HEAD", "--"]);
+  if (result.error) {
+    fail("无法执行 git diff --check：" + result.error.message);
+    return;
+  }
+  if (result.status !== 0) {
+    const detail = [result.stdout, result.stderr]
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+    fail(
+      "Git 差异包含行尾空白、冲突标记或其他格式错误。" +
+        (detail ? "\n" + detail : ""),
+    );
+    return;
+  }
+  checked.gitDiff = true;
+}
+
 function parseChannelSource(source) {
   if (typeof source !== "string") return null;
   const match = source.match(
@@ -792,6 +813,7 @@ function validateChannel() {
 }
 
 function main() {
+  validateGitDiff();
   const manifest = validateManifest();
   validateSkills();
   validateWorkflow();
@@ -822,6 +844,7 @@ function main() {
         workflowSteps: checked.workflowSteps,
         workflowStates: checked.workflowStates,
         signatures: checked.signatures,
+        gitDiff: checked.gitDiff ? "通过" : "失败",
         channel: fs.existsSync(channelPath) ? "已校验" : "尚未创建",
       },
       null,

@@ -21,7 +21,8 @@ company-trellis/
 │   ├── usage.md
 │   └── release.md
 ├── scripts/
-│   └── build-manifest.mjs
+│   ├── build-manifest.mjs
+│   └── check-release.mjs
 ├── registry/
 │   └── .trellis/
 │       ├── team-defaults.yaml
@@ -67,8 +68,10 @@ channel/ 在固定版本验证通过后创建或更新，只保存指向不可�
 首次接入稳定通道：
 
 ~~~bash
-trellis init --team-registry gh:cmx-star/company-treill/channel
+trellis init --team-registry 'git@github.com:cmx-star/company-treill/channel#main'
 ~~~
+
+该来源通过 SSH 读取公司私有仓库，使用前需要配置可访问 GitHub 仓库的 SSH 密钥。
 
 更新前检查：
 
@@ -90,27 +93,21 @@ trellis team doctor
 default_workflow: company-default
 registry:
   team:
-    source: gh:cmx-star/company-treill/channel
+    source: git@github.com:cmx-star/company-treill/channel#main
 ~~~
 
 默认配置由 Registry 三方合并，不覆盖项目已经自行修改的其他配置。
 
 ## 发布前完整性检查
 
-维护者生成 Manifest 后必须运行：
+维护者生成 Manifest 并准备好本次全部变更后，只运行一次提交前门禁：
 
 ~~~bash
 TEAM_VERSION=2026.08.1 node scripts/build-manifest.mjs
-node scripts/check-release.mjs
-~~~
-
-更新稳定 Channel 前运行：
-
-~~~bash
 node scripts/check-release.mjs --require-channel
 ~~~
 
-检查脚本不依赖第三方包，会验证 Manifest 规范化、全量 SHA256、Workflow 阶段提取、状态块、默认配置、Skill frontmatter、版本文档和 Channel 指针。
+检查脚本不依赖第三方包，会一次验证 Git 差异格式、Manifest 规范化、全量 SHA256、Workflow 阶段提取、状态块、默认配置、Skill frontmatter、版本文档和 Channel 指针。任何一项失败都不得提交。
 
 ## 维护边界
 
