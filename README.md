@@ -1,6 +1,6 @@
 # 公司 Trellis 分发仓库
 
-本仓库用于分发公司级 Trellis Spec、默认 Workflow 和专项 Skill。仓库不提供自写聚合安装器，不重新发布 Trellis，也不替用户选择编辑器或 Agent。
+本仓库用于分发公司级 Trellis Spec 和默认 Workflow，并保留公司 Skill 源目录。仓库不提供自写聚合安装器，不重新发布 Trellis，也不替用户选择编辑器或 Agent。
 
 ## 分发内容
 
@@ -8,9 +8,8 @@
 | --- | --- | --- |
 | Spec Marketplace | 工程、质量、安全规范 | `trellis init --registry ... --template company-spec` |
 | Custom Workflow | 公司默认开发工作流 | `trellis init --workflow ... --workflow-source ...` 或 `trellis workflow --marketplace ...` |
-| Custom Skills / skills.sh | Git 工作流、产品版本差异 | `npm exec --yes --package=skills@1.5.23 -- skills add ...` |
 
-公司默认工作流安装后会参与普通开发任务。遇到 Git、提交、发版等请求时加载 `company-git-workflow`；遇到私有部署、品牌、市场或版本能力差异时加载 `company-product-variants`。
+`skills/` 目录只保留源文件，不进入默认接入、更新和验收流程。
 
 ## 目录结构
 
@@ -57,14 +56,6 @@ trellis workflow --help
 trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
 ~~~
 
-再安装公司 Skill：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
-~~~
-
-`skills add` 默认交互选择安装范围、Skill 和 Agent。公司仓库不预设项目使用的编辑器、Agent 或具体安装哪些 Skill。
-
 ## 安装结果
 
 安装后至少应看到：
@@ -74,9 +65,6 @@ npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star
 .trellis/spec/company/quality.md
 .trellis/spec/company/security.md
 .trellis/workflow.md
-<Agent Skill 目录>/company-git-workflow/SKILL.md
-<Agent Skill 目录>/company-product-variants/SKILL.md
-skills-lock.json
 ~~~
 
 检查差异后，把团队需要共享的生成文件提交到业务项目。其他开发者只需拉取这些普通 Markdown 文件；他们不需要 Node 22.20.0，也不需要再次运行安装命令。
@@ -96,12 +84,6 @@ trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/ma
 trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-default --force
 ~~~
 
-最后刷新公司 Skill：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
-~~~
-
 执行后必须检查 Git diff，确认项目级规范和本地项目约束没有被误改，再提交更新结果。
 
 ## 发布检查
@@ -112,7 +94,7 @@ npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star
 node scripts/check-release.mjs
 ~~~
 
-门禁检查 Marketplace、3 个公司 Spec、846 行完整 Workflow、2 个公司 Skill、中文文档和 Git diff，并在临时项目中尽量使用官方 Trellis CLI 与 skills.sh 做端到端验证。
+门禁检查 Marketplace、3 个公司 Spec、Workflow、Skill 源目录、中文文档和 Git diff。
 
 只排查静态结构时可以运行：
 

@@ -2,29 +2,28 @@
 
 ## 2026.08.3 - 2026-08-19
 
-按 Trellis 官方提供的三条路径重新整理公司分发方式，撤回自写聚合安装器。
+按 Trellis 官方提供的两条路径重新整理公司分发方式，撤回自写聚合安装器。
 
 ### 变更
 
 - Spec Marketplace 只分发工程、质量和安全 3 份公司规范。
-- 公司 Git 工作流和产品版本差异迁移为独立 Custom Skills。
-- 使用 `skills@1.5.23` 和 `--copy` 交互选择并安装公司 Skill，生成 `skills-lock.json`。
+- 公司 Git 工作流和产品版本差异只保留为 `skills/` 源目录。
 - 公司默认 Workflow 保留完整阶段和自动路由。
 - Spec 和 Workflow 回归官方 `trellis init`、`trellis update` 与 `trellis workflow` 命令。
 - Marketplace 索引移动到官方约定的 `marketplace/index.json`。
-- 完整性门禁检查 3 个 Spec、2 个 Skill、Workflow、官方 CLI 参数和 skills.sh 复制能力。
+- 完整性门禁检查 3 个 Spec、2 个 Skill 源文件、Workflow 和官方 CLI 参数。
 - 中文文档明确安装产物应提交到业务项目，低 Node 版本使用者只需 Git 拉取。
 
 ### 兼容性
 
 - 最低验证 Trellis：`@mindfoldhq/trellis` 0.6.15。
 - 安装或更新要求 Node 22.20.0 或更高版本。
-- 安装后的 Spec、Workflow 和 Skill 是普通项目文件，使用者不需要 Node 22.20.0。
+- 安装后的 Spec 和 Workflow 是普通项目文件，使用者不需要 Node 22.20.0。
 - 本仓库不发布 npm 包，不提供 npm Git package 安装入口。
 
 ### 迁移
 
-- 删除旧的公司 Git 与产品差异 Spec 文件；已接入项目应安装同名公司 Skill，并清理旧 Spec 副本。
+- 删除旧的公司 Git 与产品差异 Spec 文件；已接入项目应清理旧 Spec 副本。
 - 旧的仓库根 `index.json` 移至 `marketplace/index.json`，Registry 来源改为 `https://github.com/cmx-star/company-treill/tree/main/marketplace`。
 
 ## 2026.08.2 - 2026-08-19

@@ -2,13 +2,9 @@
   "name": "company-trellis",
   "version": "2026.8.3",
   "private": true,
-  "description": "公司 Trellis Marketplace 与 Skill 分发仓库",
+  "description": "公司 Trellis Marketplace 与 Skill 源目录",
   "type": "module",
   "engines": {
     "node": ">=22.20.0"
-  },
-  "files": [
-    "marketplace",
-    "skills"
-  ]
+  }
 }

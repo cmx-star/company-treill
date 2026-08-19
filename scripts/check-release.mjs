@@ -26,8 +26,6 @@ const registrySource =
   "https://github.com/cmx-star/company-treill/tree/main/marketplace";
 const workflowSource =
   "https://github.com/cmx-star/company-treill/tree/main/marketplace";
-const skillsSource = "https://github.com/cmx-star/company-treill.git";
-const skillsPackage = "skills@1.5.23";
 const requiredNodeVersion = "22.20.0";
 const companySkills = [
   "company-git-workflow",
@@ -39,7 +37,7 @@ const errors = [];
 const checked = {
   marketplaceEntries: 0,
   companySpecs: 0,
-  companySkills: 0,
+  companySkillSources: 0,
   workflowLines: 0,
   workflowSteps: 0,
   workflowStates: 0,
@@ -278,13 +276,13 @@ function parseSkillFrontmatter(content, filePath) {
   return values;
 }
 
-function validateCompanySkills() {
+function validateCompanySkillSources() {
   const actualEntries = fs.existsSync(skillsRoot)
     ? fs.readdirSync(skillsRoot).sort()
     : [];
   expect(
     JSON.stringify(actualEntries) === JSON.stringify(companySkills),
-    `公司 Skill 目录必须精确为：${companySkills.join("、")}。`,
+    `公司 Skill 源目录必须精确为：${companySkills.join("、")}。`,
   );
   for (const skillName of companySkills) {
     const skillDirectory = path.join(skillsRoot, skillName);
@@ -310,7 +308,7 @@ function validateCompanySkills() {
       content.includes("\n# "),
       `${relative(skillPath)} 缺少一级标题。`,
     );
-    checked.companySkills += 1;
+    checked.companySkillSources += 1;
   }
 }
 
@@ -335,8 +333,8 @@ function validateWorkflow() {
   if (!content) return;
   const workflowLines = content.split("\n").length - 1;
   expect(
-    workflowLines === 844,
-    `Workflow 必须保留当前发布版 844 行，实际为 ${workflowLines} 行。`,
+    workflowLines === 777,
+    `Workflow 必须保留当前发布版 777 行，实际为 ${workflowLines} 行。`,
   );
   checked.workflowLines = workflowLines;
   const headings = [
@@ -368,7 +366,6 @@ function validateWorkflow() {
     "3.1",
     "3.2",
     "3.3",
-    "3.4",
   ];
   const seenSteps = [...content.matchAll(/^####\s+(\d+\.\d+)\b.*$/gm)].map(
     (match) => match[1],
@@ -410,14 +407,6 @@ function validateWorkflow() {
 
   expect(content.includes("自动路由"), "Workflow 缺少自动路由说明。");
   expect(
-    content.includes("company-git-workflow"),
-    "Workflow 未加载公司 Git Skill。",
-  );
-  expect(
-    content.includes("company-product-variants"),
-    "Workflow 未加载公司产品差异 Skill。",
-  );
-  expect(
     !content.includes(".trellis/spec/company/git-workflow.md") &&
       !content.includes(".trellis/spec/company/product-variants.md"),
     "Workflow 仍把专项 Skill 当作公司 Spec。",
@@ -441,11 +430,8 @@ function validatePackageMetadata() {
       `package.json 必须要求 Node >=${requiredNodeVersion}。`,
     );
     expect(
-      Array.isArray(packageJson.files) &&
-        !packageJson.files.includes("bin") &&
-        packageJson.files.includes("marketplace") &&
-        packageJson.files.includes("skills"),
-      "package.json files 必须只分发 marketplace 和 skills，不得包含 bin。",
+      !Object.prototype.hasOwnProperty.call(packageJson, "files"),
+      "package.json 不得声明 files；本仓库不作为 npm 分发包使用。",
     );
   }
 
@@ -474,12 +460,9 @@ function validateDocsAndExamples() {
   for (const fragment of [
     "Spec Marketplace",
     "Custom Workflow",
-    "Custom Skills",
     "Node 22.20.0",
-    "skills-lock.json",
     "company-git-workflow/SKILL.md",
     "company-product-variants/SKILL.md",
-    "npm exec --yes --package=skills@1.5.23 -- skills add",
     "--registry",
     "--template company-spec",
     "--workflow company-default",
@@ -500,8 +483,11 @@ function validateDocsAndExamples() {
     "git+https://github.com/cmx-star/" + "company-treill.git",
     "company-trellis" + " install",
     "company-trellis" + " update",
-    "skills add https://github.com/cmx-star/company-treill.git " + "--skill",
-    "skills add https://github.com/cmx-star/company-treill.git --copy " + "--agent",
+    "skills" + ".sh",
+    "skills" + "-lock.json",
+    "npm exec --yes --package=" + "skills",
+    "skills" + " add https://github.com/cmx-star/company-treill.git " + "--skill",
+    "skills" + " add https://github.com/cmx-star/company-treill.git --copy " + "--agent",
     "--team-registry",
     "trellis team",
     "team-manifest.json",
@@ -667,47 +653,7 @@ function validateOfficialCliE2E() {
     );
     expect(fs.existsSync(installedWorkflow), "刷新后缺少 .trellis/workflow.md。");
 
-    requireSuccess(
-      run(
-        "npm",
-        [
-          "exec",
-          "--yes",
-          `--package=${skillsPackage}`,
-          "--",
-          "skills",
-          "add",
-          repoRoot,
-          "--skill",
-          "company-git-workflow",
-          "company-product-variants",
-          "--copy",
-          "--agent",
-          "codex",
-          "--yes",
-        ],
-        { cwd: projectRoot },
-      ),
-      "skills.sh 复制公司 Skill",
-    );
-    for (const skillName of companySkills) {
-      const installedSkill = path.join(
-        projectRoot,
-        ".agents",
-        "skills",
-        skillName,
-        "SKILL.md",
-      );
-      expect(fs.existsSync(installedSkill), `初始化后缺少公司 Skill：${skillName}`);
-      expect(
-        readText(installedSkill) ===
-          readText(path.join(skillsRoot, skillName, "SKILL.md")),
-        `安装后的公司 Skill 内容不一致：${skillName}`,
-      );
-    }
-    const lockPath = path.join(projectRoot, "skills-lock.json");
-    expect(fs.existsSync(lockPath), "初始化后缺少 skills-lock.json。");
-    checked.e2e = `通过（Trellis ${versionOutput.trim()}，Skills ${skillsPackage}）`;
+    checked.e2e = `通过（Trellis ${versionOutput.trim()}）`;
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
@@ -717,7 +663,7 @@ function main() {
   validateGitDiff();
   validateMarketplace();
   validateCompanySpecs();
-  validateCompanySkills();
+  validateCompanySkillSources();
   validateWorkflow();
   validatePackageMetadata();
   validateDocsAndExamples();

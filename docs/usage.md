@@ -4,7 +4,7 @@
 
 每个业务项目只需要一名维护者或有权限的开发者运行接入和更新命令，然后把生成文件提交到业务项目 Git。
 
-运行接入和更新命令的机器需要 Node 22.20.0 或更高版本。其他成员拉取已经提交的 `.trellis/`、Agent Skill 和 `skills-lock.json` 后即可使用，不受接入机器的 Node 版本限制。
+运行接入和更新命令的机器需要 Node 22.20.0 或更高版本。其他成员拉取已经提交的 `.trellis/` 后即可使用，不受接入机器的 Node 版本限制。
 
 ## 前置检查
 
@@ -28,14 +28,6 @@ git ls-remote https://github.com/cmx-star/company-treill.git HEAD
 trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-spec --append --workflow company-default --workflow-source "https://github.com/cmx-star/company-treill/tree/main/marketplace"
 ~~~
 
-再安装公司 Skill：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
-~~~
-
-`skills add` 默认交互选择项目或全局范围、要安装的 Skill 以及目标 Agent。公司仓库不预设编辑器、Agent 或具体安装哪些 Skill。
-
 ## 安装结果
 
 项目至少应包含：
@@ -45,35 +37,27 @@ npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star
 .trellis/spec/company/quality.md
 .trellis/spec/company/security.md
 .trellis/workflow.md
-<Agent Skill 目录>/company-git-workflow/SKILL.md
-<Agent Skill 目录>/company-product-variants/SKILL.md
-skills-lock.json
 ~~~
-
-如果交互时选择 `codex`，Agent Skill 目录通常是 `.agents/skills/`，对应结果为 `.agents/skills/company-git-workflow/SKILL.md` 和 `.agents/skills/company-product-variants/SKILL.md`。
 
 检查命令：
 
 ~~~bash
 find .trellis/spec/company -type f | sort
 test -f .trellis/workflow.md && printf '%s\n' .trellis/workflow.md
-find "<Agent Skill 目录>" -maxdepth 2 -type f | sort
 git status --short
 ~~~
 
 Windows PowerShell：
 
 ~~~powershell
-Get-ChildItem .trellis\spec\company,"<Agent Skill 目录>" -Recurse -File; Test-Path .trellis\workflow.md; git status --short
+Get-ChildItem .trellis\spec\company -Recurse -File; Test-Path .trellis\workflow.md; git status --short
 ~~~
 
-确认差异后，把团队需要共享的 Trellis、Agent Skill 和锁文件提交到业务项目。不要提交密钥、个人配置或与本次接入无关的改动。
+确认差异后，把团队需要共享的 Trellis 文件提交到业务项目。不要提交密钥、个人配置或与本次接入无关的改动。
 
 ## 日常使用
 
 接入后正常描述开发任务。Trellis 会注入 `.trellis/workflow.md`，工作流会读取公司 Spec、项目规范和当前任务上下文，并按任务风险选择紧凑路径或完整路径。
-
-Git、提交、合并、Tag、Hotfix、推送和发布请求会加载 `company-git-workflow`。私有部署、品牌、市场、外部服务、本地化和版本能力请求会加载 `company-product-variants`。
 
 ## 项目级规范
 
@@ -114,19 +98,11 @@ trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/ma
 trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/main/marketplace" --template company-default --force
 ~~~
 
-最后刷新公司 Skill：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
-~~~
-
 更新完成后检查：
 
 1. 3 份公司 Spec 已更新。
 2. `.trellis/workflow.md` 与公司版本一致。
-3. 2 个公司 Skill 已重新复制。
-4. `skills-lock.json` 已同步。
-5. `.trellis/spec/project/` 未被删除或覆盖。
+3. `.trellis/spec/project/` 未被删除或覆盖。
 
 ## 固定版本
 
@@ -150,10 +126,6 @@ git ls-remote https://github.com/cmx-star/company-treill.git HEAD
 
 由仓库管理员处理账号权限和 Git HTTPS 凭据。不要把令牌、密码或凭据内容复制到项目、日志或聊天中。
 
-### Skill 没有出现
-
-交互安装时确认已经选择目标 Skill 和 Agent。再检查对应 Agent Skill 目录与 `skills-lock.json`。Trellis CLI 本身不会替代 skills.sh 安装外部 Skill。
-
 ### 项目修改了公司分发副本
 
-先保留 diff 并判断这些修改应该进入公司仓库还是项目级规范。直接更新可能覆盖 Workflow 和 Skill 的本地改动，不要在未审查时执行更新。
+先保留 diff 并判断这些修改应该进入公司仓库还是项目级规范。直接更新可能覆盖 Workflow 的本地改动，不要在未审查时执行更新。
