@@ -36,7 +36,7 @@ frame -> solution -> slice -> build -> verify -> review -> finish
 Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本仓库只保存 Skill 源文件，安装和更新都交给 skills.sh：
 
 ~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
 ~~~
 
 当前发布两个公司 Skill：

@@ -8,7 +8,7 @@
 
 - Spec Marketplace 只分发工程、质量和安全 3 份公司规范。
 - 公司 Git 工作流和产品版本差异迁移为独立 Custom Skills。
-- 使用 `skills@1.5.23` 和 `--copy` 把公司 Skill 分发到项目 Agent 目录，并生成 `skills-lock.json`。
+- 使用 `skills@1.5.23` 和 `--copy` 交互选择并安装公司 Skill，生成 `skills-lock.json`。
 - 公司默认 Workflow 保留完整阶段和自动路由。
 - Spec 和 Workflow 回归官方 `trellis init`、`trellis update` 与 `trellis workflow` 命令。
 - Marketplace 索引移动到官方约定的 `marketplace/index.json`。

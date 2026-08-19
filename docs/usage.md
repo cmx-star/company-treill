@@ -31,16 +31,10 @@ trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/ma
 再安装公司 Skill：
 
 ~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
 ~~~
 
-`skills add` 默认交互选择项目或全局范围以及目标 Agent。需要非交互执行时，由执行者明确传入实际使用的 `--agent <名称>` 和 `--yes`：
-
-~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy --agent <名称> --yes
-~~~
-
-公司仓库不预设编辑器或 Agent。需要同时安装到多个工具时，按 skills.sh 规则重复传入 `--agent <名称>`。
+`skills add` 默认交互选择项目或全局范围、要安装的 Skill 以及目标 Agent。公司仓库不预设编辑器、Agent 或具体安装哪些 Skill。
 
 ## 安装结果
 
@@ -123,7 +117,7 @@ trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/
 最后刷新公司 Skill：
 
 ~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
 ~~~
 
 更新完成后检查：
@@ -158,7 +152,7 @@ git ls-remote https://github.com/cmx-star/company-treill.git HEAD
 
 ### Skill 没有出现
 
-交互安装时确认已经选择目标 Agent；非交互安装时确认命令显式传入了实际使用的 `--agent <名称>` 和 `--yes`。再检查对应 Agent Skill 目录与 `skills-lock.json`。Trellis CLI 本身不会替代 skills.sh 安装外部 Skill。
+交互安装时确认已经选择目标 Skill 和 Agent。再检查对应 Agent Skill 目录与 `skills-lock.json`。Trellis CLI 本身不会替代 skills.sh 安装外部 Skill。
 
 ### 项目修改了公司分发副本
 

@@ -60,10 +60,10 @@ trellis init --registry "https://github.com/cmx-star/company-treill/tree/main/ma
 再安装公司 Skill：
 
 ~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
 ~~~
 
-`skills add` 默认交互选择安装范围和 Agent。自动化或非交互环境由执行者自行追加实际使用的 `--agent <名称>` 和 `--yes`；公司仓库不预设项目使用的编辑器或 Agent。
+`skills add` 默认交互选择安装范围、Skill 和 Agent。公司仓库不预设项目使用的编辑器、Agent 或具体安装哪些 Skill。
 
 ## 安装结果
 
@@ -99,7 +99,7 @@ trellis workflow --marketplace "https://github.com/cmx-star/company-treill/tree/
 最后刷新公司 Skill：
 
 ~~~bash
-npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
+npm exec --yes --package=skills@1.5.23 -- skills add https://github.com/cmx-star/company-treill.git --copy
 ~~~
 
 执行后必须检查 Git diff，确认项目级规范和本地项目约束没有被误改，再提交更新结果。

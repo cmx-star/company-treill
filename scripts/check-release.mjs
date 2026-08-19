@@ -500,6 +500,8 @@ function validateDocsAndExamples() {
     "git+https://github.com/cmx-star/" + "company-treill.git",
     "company-trellis" + " install",
     "company-trellis" + " update",
+    "skills add https://github.com/cmx-star/company-treill.git " + "--skill",
+    "skills add https://github.com/cmx-star/company-treill.git --copy " + "--agent",
     "--team-registry",
     "trellis team",
     "team-manifest.json",
