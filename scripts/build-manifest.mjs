@@ -60,14 +60,6 @@ const manifest = {
     min: "0.6.15",
     maxExclusive: "0.8.0",
   },
-  summary:
-    process.env.TEAM_SUMMARY ??
-    previous.summary ??
-    "公司默认工作流、Git、产品差异、工程质量和安全规范",
-  compatibility: previous.compatibility ?? {
-    platforms: [],
-    notes: "内容为平台无关 Markdown，公司 Skill 由 Trellis 投影。",
-  },
   files: files.sort().map((absolutePath) => {
     const content = fs.readFileSync(absolutePath);
     return {
@@ -83,6 +75,14 @@ const manifest = {
   ...(previous.rollbackVersion
     ? { rollbackVersion: previous.rollbackVersion }
     : {}),
+  summary:
+    process.env.TEAM_SUMMARY ??
+    previous.summary ??
+    "公司默认工作流、Git、产品差异、工程质量和安全规范",
+  compatibility: previous.compatibility ?? {
+    platforms: [],
+    notes: "内容为平台无关 Markdown，公司 Skill 由 Trellis 投影。",
+  },
   deprecations: previous.deprecations ?? [],
   governance: previous.governance ?? {
     requireDeprecationNotices: true,
