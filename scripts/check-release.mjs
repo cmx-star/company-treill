@@ -130,6 +130,7 @@ function run(command, args, options = {}) {
     env: options.env ?? process.env,
     encoding: "utf-8",
     maxBuffer: 20 * 1024 * 1024,
+    shell: process.platform === "win32" && command !== process.execPath,
   });
 }
 
@@ -565,7 +566,7 @@ function resolveTrellisCommand() {
     return { command: configured, prefix: [] };
   }
   return {
-    command: process.platform === "win32" ? "trellis.cmd" : "trellis",
+    command: "trellis",
     prefix: [],
   };
 }

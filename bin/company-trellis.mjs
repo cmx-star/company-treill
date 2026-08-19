@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const REGISTRY_SOURCE =
   "https://github.com/cmx-star/company-treill/tree/main/marketplace";
 const SKILLS_SOURCE = "https://github.com/cmx-star/company-treill.git";
+const TRELLIS_PACKAGE = "@mindfoldhq/trellis@latest";
 const SKILLS_PACKAGE = "skills@1.5.23";
 const COMPANY_SKILLS = [
   "company-git-workflow",
@@ -127,14 +128,31 @@ function quote(value) {
   return /[\s"']/u.test(value) ? JSON.stringify(value) : value;
 }
 
-function commandName(name) {
-  return process.platform === "win32" ? `${name}.cmd` : name;
+function shouldUseShell(command) {
+  return process.platform === "win32" && command !== process.execPath;
 }
 
 function resolveTrellisCommand() {
   const configured = process.env.TRELLIS_CLI?.trim();
   if (!configured) {
-    return { command: "trellis", prefix: [] };
+    const result = spawnSync("trellis", ["--version"], {
+      stdio: "ignore",
+      env: process.env,
+      shell: shouldUseShell("trellis"),
+    });
+    if (!result.error && result.status === 0) {
+      return { command: "trellis", prefix: [] };
+    }
+    return {
+      command: "npm",
+      prefix: [
+        "exec",
+        "--yes",
+        `--package=${TRELLIS_PACKAGE}`,
+        "--",
+        "trellis",
+      ],
+    };
   }
   if (configured.endsWith(".js")) {
     return { command: process.execPath, prefix: [configured] };
@@ -145,10 +163,11 @@ function resolveTrellisCommand() {
 function run(command, args, options) {
   console.log(`> ${command} ${args.map(quote).join(" ")}`);
   if (options.dryRun) return;
-  const result = spawnSync(commandName(command), args, {
+  const result = spawnSync(command, args, {
     cwd: options.project,
     stdio: "inherit",
     env: process.env,
+    shell: shouldUseShell(command),
   });
   if (result.error) {
     throw new Error(`${command} 无法执行：${result.error.message}`);
