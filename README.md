@@ -35,21 +35,26 @@ company-trellis/
 
 项目级规范不由公司仓库覆盖。业务项目继续在 `.trellis/spec/project/` 中维护自己的架构、命令、测试和业务约束，本仓库的 `examples/project-spec/` 只提供结构示例。
 
-## 一次安装
+## 安装
 
-安装或更新机器需要：
+安装或更新机器需要 Node 22.20.0 或更高版本，并且当前 GitHub SSH 账号可以读取公司私有仓库。
 
-- Node 22.20.0 或更高版本。
-- `@mindfoldhq/trellis` 0.6.15 或更高版本已经可执行。
-- 当前 GitHub SSH 账号可以读取私有仓库。
-
-在业务项目根目录执行：
+先全局安装官方 Trellis CLI：
 
 ~~~bash
-npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install --agent codex --agent cursor --yes
+npm install -g @mindfoldhq/trellis@latest
+trellis --version
 ~~~
 
-按项目实际使用的工具传入一个或多个 `--agent`；不使用 Cursor 时可以删除 `--agent cursor`。安装器会一次完成 Spec、Workflow 和 Skill 三部分分发。
+当前方案要求 `@mindfoldhq/trellis` 0.6.15 或更高版本。版本不满足时升级 Trellis，再继续安装公司规范。
+
+然后在业务项目根目录执行公司 Trellis 安装命令：
+
+~~~bash
+npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis install
+~~~
+
+安装器会交互询问项目使用的 Agent，并一次完成 Spec、Workflow 和 Skill 三部分分发。自动化或非交互环境由执行者自行追加一个或多个 `--agent <名称>` 和 `--yes`，仓库不预设项目使用的编辑器或 Agent。
 
 安装后至少应看到：
 
@@ -58,8 +63,8 @@ npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#m
 .trellis/spec/company/quality.md
 .trellis/spec/company/security.md
 .trellis/workflow.md
-.agents/skills/company-git-workflow/SKILL.md
-.agents/skills/company-product-variants/SKILL.md
+<Agent Skill 目录>/company-git-workflow/SKILL.md
+<Agent Skill 目录>/company-product-variants/SKILL.md
 skills-lock.json
 ~~~
 
@@ -70,7 +75,7 @@ skills-lock.json
 在业务项目根目录执行：
 
 ~~~bash
-npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis update --agent codex --agent cursor --yes
+npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#main" -- company-trellis update
 ~~~
 
 更新会刷新公司 Spec、强制替换公司 Workflow，并重新复制公司 Skill。执行后必须检查 Git diff，确认项目级规范和本地项目约束没有被误改，再提交更新结果。
@@ -81,7 +86,7 @@ npm exec --yes --package="git+ssh://git@github.com/cmx-star/company-treill.git#m
 
 ~~~bash
 trellis init --registry "git@github.com:cmx-star/company-treill/marketplace#main" --template company-spec --append --workflow company-default --workflow-source "git@github.com:cmx-star/company-treill/marketplace#main"
-npx --yes skills@1.5.23 add git@github.com:cmx-star/company-treill.git --skill company-git-workflow company-product-variants --agent codex --copy --yes
+npx --yes skills@1.5.23 add git@github.com:cmx-star/company-treill.git --skill company-git-workflow company-product-variants --copy
 ~~~
 
 ## 发布检查
