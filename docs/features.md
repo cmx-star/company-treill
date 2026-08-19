@@ -1,28 +1,26 @@
 # 功能说明
 
-## 官方能力边界
+## 三条官方分发路径
 
-本仓库只使用 `@mindfoldhq/trellis` 0.6.15 已发布的两项能力：
+本仓库没有自造 Team Manifest、Channel 或另一套运行时，而是组合三个独立能力。
 
-1. Spec Registry：把远程模板安装到 `.trellis/spec/`，并在 `trellis update` 时刷新。
-2. Workflow marketplace：把远程 Workflow 安装为 `.trellis/workflow.md`。
+### Spec Marketplace
 
-公司仓库不接管 Trellis CLI，不分发 Trellis 内部配置，也不依赖第三方 Skill 自动投影。
+`company-spec` 模板包含 3 份公司底线：
 
-## 公司默认工作流
+| 文件 | 内容 |
+| --- | --- |
+| engineering.md | 事实来源、修改边界、依赖、文档和项目上下文要求 |
+| quality.md | 验证、Bug 根因、审查、完成条件和未验证结果说明 |
+| security.md | 密钥、权限、数据、配置和供应链边界 |
 
-`company-default` 安装后就是项目当前的 `.trellis/workflow.md`。开发任务由 Trellis 平台集成自动读取该文件，不要求输入 `/flow`。
+Spec Marketplace 的本质是把模板复制进项目，作为项目规范的起点。安装后的文件属于业务项目，不是远程 Wiki 或运行时网络引用。安装器保留 Registry 来源，后续可通过 `trellis update` 刷新已分发内容，但每次更新仍应作为普通项目文件变更进行审查和提交。
 
-工作流根据请求和当前状态自动选择：
+### Custom Workflow
 
-- 对话、解释和只读查询直接处理。
-- 小型修改走定界、实施、验证和审查的紧凑路径。
-- 多文件、跨模块、迁移、依赖、安全和公共契约任务走完整路径。
-- Bug、测试失败、构建失败和行为回归先诊断根因。
-- Git 和发布操作读取公司 Git 规范。
-- 部署、品牌、市场和版本差异读取公司产品差异规范。
+`company-default` 通过官方 Custom Workflow marketplace 安装为唯一的 `.trellis/workflow.md`。
 
-标准阶段为：
+工作流保留完整的定界、方案、切分、实施、诊断、验证、审查和收尾阶段，并根据请求自动路由：
 
 ~~~text
 frame -> solution -> slice -> build -> verify -> review -> finish
@@ -31,57 +29,59 @@ frame -> solution -> slice -> build -> verify -> review -> finish
                      +----------+
 ~~~
 
-每个阶段都定义进入条件、必读上下文、执行步骤、输出、通过条件、阻塞条件和下一阶段。
+普通任务会直接进入该工作流，不依赖 `/flow`、关键词或另一套 Flow Skill。只读问题不会机械创建 Task；多文件、迁移、公共契约、依赖和高风险任务才进入完整阶段。
 
-## 公司 Spec
+### Custom Skills
 
-公司模板安装到 `.trellis/spec/company/`：
+Trellis 不负责把外部自定义 Skill 自动安装到所有 AI 工具。本仓库按照官方 Custom Skills 目录约定保存 Skill，再使用 skills.sh 的 `npx skills add` 复制到项目平台目录。
 
-| 文档 | 负责内容 |
+当前发布两个公司 Skill：
+
+| Skill | 触发范围 |
 | --- | --- |
-| engineering.md | 事实来源、修改边界、依赖和文档要求 |
-| quality.md | 验证原则、Bug 修复、审查和完成标准 |
-| security.md | 敏感信息、权限、数据、配置和供应链 |
-| git-workflow.md | 分支模型、提交、合并、Hotfix、Tag 和发布授权 |
-| product-variants.md | 部署、品牌、市场、外部服务、本地化和版本能力差异 |
+| company-git-workflow | 分支、提交、合并、Hotfix、Tag、推送和发布 |
+| company-product-variants | 私有部署、公有云、中性品牌、海外市场、外部服务和版本能力 |
 
-Git 与产品差异内容使用 Spec 承载，是因为官方 0.6.15 能持续更新远程 Spec，而不会自动分发公司自定义 Skill。
+使用 `--copy` 后，Skill 是业务项目中的普通 Markdown 文件，同时生成 `skills-lock.json`。这些文件应提交到业务项目，低 Node 版本使用者拉取后即可被对应 Agent 发现。
 
-## 公司级与项目级
+## 公司级和项目级分层
 
-任务执行时按以下层级组合上下文：
+任务处理时组合以下上下文：
 
-1. `.trellis/spec/company/` 中的公司底线。
-2. 项目的 `AGENTS.md` 及本地补充。
-3. `.trellis/spec/project/` 和其他项目规范。
-4. 当前 Trellis Task 的需求、设计、计划和进度。
-5. 用户最新要求。
+1. `.trellis/spec/company/` 中的公司工程、质量和安全底线。
+2. 项目的 `AGENTS.md`、`AGENTS.override.md` 和显式读取的个人补充。
+3. `.trellis/spec/project/` 及其他项目规范。
+4. 当前 Trellis Task 的需求、方案、计划和进度。
+5. 用户最新确认的目标、限制和授权。
 6. 当前代码、配置、测试、CI 和 Git 状态。
 
-公司规范回答“所有项目必须怎样工作”，项目规范回答“这个项目具体怎样实现”。
+公司规范回答“所有项目必须遵守什么”，项目规范回答“这个项目具体如何实现”。项目可以补充或收紧公司规则，但不能静默降低安全、质量和授权边界。
 
-`examples/project-spec/` 只提供结构示例。真实项目必须根据当前代码、配置、脚本和 CI 编写，不直接复制示例结论。
+## 自动执行与 Skill 路由
 
-## 更新行为
+工作流安装后由 Trellis 注入项目的 Agent 上下文。用户正常描述任务即可，例如：
 
-`trellis update` 会根据 `.trellis/config.yaml` 中的 `registry.spec` 配置刷新公司 Spec，并通过 Trellis 原有冲突机制保护本地修改。
-
-官方 Workflow marketplace 不会在 `trellis update` 时自动替换用户管理的 Workflow，因此公司 Workflow 需要单独刷新：
-
-~~~bash
-trellis workflow --marketplace "git@github.com:cmx-star/company-treill#main" --template company-default --force
+~~~text
+修复登录页在令牌过期后仍显示已登录的问题。
 ~~~
 
-`--force` 会覆盖 `.trellis/workflow.md` 的本地修改。项目确需自定义工作流时，应先形成项目级变体或明确例外，不直接运行该更新命令覆盖。
+工作流先按任务类型选择执行路径。出现 Git 或发布动作时加载 `company-git-workflow`；出现产品版本差异时加载 `company-product-variants`。专项规则因此保持为可按条件加载的 Skill，不会长期占用所有任务的上下文。
 
-## 不提供的能力
+## 更新模型
 
-当前分发不提供以下机制：
+`company-trellis update` 顺序执行：
 
-- 公司自定义 Skill 的平台自动投影。
-- 公司默认配置的三方合并。
-- 文件签名、审批计数和远程更新预览。
-- 独立 WorkItem、Delivery、Run 或 Conversation 运行时。
-- 独立 checkpoint、receipt 或 Stop Hook。
+1. `trellis update --skip-all`，刷新 Trellis 管理内容和公司 Spec。
+2. `trellis workflow --marketplace ... --force`，替换公司 Workflow。
+3. `npx --yes skills@1.5.23 add ... --copy --yes`，重新复制两个公司 Skill。
 
-这些能力不属于官方 0.6.15 已发布的公司分发接口，不在本仓库模拟实现。
+Workflow 的 `--force` 会覆盖项目当前 `.trellis/workflow.md`。项目若需要长期定制 Workflow，应建立经过批准的项目变体，不能把本地修改留在公司分发副本中等待下次被覆盖。
+
+## 明确不提供
+
+- 不修改或重新发布 `@mindfoldhq/trellis`。
+- 不要求把 `company-trellis` 发布到 npm Registry。
+- 不引入 WorkItem、Delivery、Run 或 Conversation 运行时。
+- 不引入独立 checkpoint、receipt、Stop Hook 或 `/flow` 命令。
+- 不自动覆盖 `.trellis/spec/project/`。
+- 不把 Git 和产品差异规则伪装成 Spec。

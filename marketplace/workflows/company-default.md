@@ -2,7 +2,13 @@
 
 ## 1. 目标与适用范围
 
-本工作流通过 Trellis 官方 Workflow marketplace 安装为项目的 `.trellis/workflow.md`。安装后，开发任务自动进入本工作流，不依赖 /flow、关键词、平台命令或额外的 Flow Skill。
+本工作流通过 Trellis 官方 Workflow marketplace 分发。项目安装位置固定为：
+
+~~~text
+.trellis/workflow.md
+~~~
+
+安装后，开发任务自动进入本工作流，不依赖 /flow、关键词、平台命令或额外的 Flow Skill。
 
 本工作流负责：
 
@@ -10,7 +16,7 @@
 2. 在实施前明确目标、范围、排除项、验收和验证。
 3. 需要时完成技术方案、任务切分和持久化上下文。
 4. 按 build、diagnose、verify、review 的证据链完成交付。
-5. 自动加载公司规范和项目规范。
+5. 自动加载公司规范、项目规范和适用的公司 Skill。
 6. 使用 Trellis 原生 Task、Workflow、Spec、会话状态和平台能力。
 
 本工作流不引入以下 Skill Share 运行时：
@@ -26,11 +32,12 @@
 处理任务时按以下顺序加载并判断：
 
 1. 公司强制规范：.trellis/spec/company/。
-2. 项目 AGENTS.md、AGENTS.override.md 和显式读取的 AGENTS.local.md。
-3. 项目 .trellis/spec/ 中与当前包、层或能力相关的规范。
-4. 当前 Trellis Task 的需求、设计、计划、上下文和进度。
-5. 用户最新消息中确认的目标、限制、授权和验收要求。
-6. 当前 Git 状态、代码、配置、测试、CI 和实际运行结果。
+2. 与当前操作匹配的公司 Skill。
+3. 项目 AGENTS.md、AGENTS.override.md 和显式读取的 AGENTS.local.md。
+4. 项目 .trellis/spec/ 中与当前包、层或能力相关的规范。
+5. 当前 Trellis Task 的需求、设计、计划、上下文和进度。
+6. 用户最新消息中确认的目标、限制、授权和验收要求。
+7. 当前 Git 状态、代码、配置、测试、CI 和实际运行结果。
 
 约束优先级：
 
@@ -52,7 +59,7 @@ Skill Share 中可以复用的工作方法映射到 Trellis：
 | 跨会话进度 | 当前 Task 的进度记录和 Trellis 会话状态 |
 | 项目长期约束 | .trellis/spec/ |
 | 公司长期约束 | Spec Registry 分发的 .trellis/spec/company/ |
-| 条件触发流程 | .trellis/spec/company/ 中对应的专项规范 |
+| 条件触发流程 | 项目平台目录中的公司 Skill |
 | 阶段路由 | 本 Workflow 与 workflow-state |
 
 不得为同一任务再创建平行的需求主键、状态目录或运行时。
@@ -70,8 +77,8 @@ Skill Share 中可以复用的工作方法映射到 Trellis：
 | 小型、可逆、单一验证路径的修改 | 紧凑路径：frame -> build -> verify -> review |
 | 多文件、跨模块、公共契约、迁移、依赖、安全或长时任务 | 标准路径：frame -> solution -> slice -> build -> verify -> review |
 | Bug、测试失败、构建失败、回归、性能或集成异常 | 先进入 diagnose，再按证据返回 frame、build、verify 或 review |
-| Git、提交、合并、Tag、Hotfix、推送或发布 | 读取 .trellis/spec/company/git-workflow.md |
-| 部署、品牌、市场、外部服务、本地化或版本能力差异 | 读取 .trellis/spec/company/product-variants.md |
+| Git、提交、合并、Tag、Hotfix、推送或发布 | 加载 company-git-workflow |
+| 部署、品牌、市场、外部服务、本地化或版本能力差异 | 加载 company-product-variants |
 
 只读请求不因为工作流存在而机械创建 Task。会修改仓库且需要多阶段恢复的工作，应创建或继续 Trellis Task。
 
@@ -370,7 +377,7 @@ Phase 3: Finish  -> 上下文演进、已授权 Git/发布动作、结果审核�
 - 相关模块、调用方、公共接口和测试。
 - 项目配置、CI 和相邻实现。
 - 涉及外部框架或 API 时的官方文档。
-- 涉及产品差异时读取 `.trellis/spec/company/product-variants.md`。
+- 涉及产品差异时加载 `company-product-variants`。
 
 ##### 执行步骤
 
@@ -774,7 +781,7 @@ Phase 3: Finish  -> 上下文演进、已授权 Git/发布动作、结果审核�
 
 #### 3.2 Git 与发布
 
-涉及以下动作时读取 `.trellis/spec/company/git-workflow.md`：
+涉及以下动作时加载 `company-git-workflow`：
 
 - 创建或切换分支。
 - 暂存和提交。
